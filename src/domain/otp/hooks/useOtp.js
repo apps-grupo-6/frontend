@@ -70,6 +70,7 @@ export default function useOtp({ username = null, new_password = null, onSuccess
                 }
 
                 setShowOtp(false);
+                setOtp("")
                 onSuccess();
 
             } catch (e) {
