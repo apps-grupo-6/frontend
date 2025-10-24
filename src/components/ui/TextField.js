@@ -9,16 +9,25 @@ export default function TextField({
   secureTextEntry = false,
   keyboardType = "default",
   autoCapitalize = "none",
+  editable = true, 
 }) {
   return (
-    <View style={styles.container}>
+    <View 
+      style={styles.container} 
+      pointerEvents={editable ? "auto" : "none"}
+    >
       {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          styles,
+          !editable && styles.inputDisabled,
+        ]}
         placeholder={placeholder}
         placeholderTextColor="#999"
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={editable ? onChangeText : undefined}
+        editable={editable}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
@@ -29,7 +38,7 @@ export default function TextField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 5,
   },
   label: {
     fontSize: 14,
@@ -46,5 +55,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     color: colors.text,
+  },
+  inputDisabled: {
+    backgroundColor: "#e5e7eb",
+    opacity: 0.5 
   },
 });

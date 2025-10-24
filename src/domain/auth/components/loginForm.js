@@ -4,14 +4,42 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import colors from "@/theme/colors";
 
 export default function LoginForm({
-  username, setUsername, password, setPassword,
-  onSubmit, onGoRegister, onRecover, loading, errorMsg,
+  username, setUsername, 
+  password, setPassword,
+  loading, 
+  authErrorMsg,
+  onSubmit, onGoRegister, onRecover, 
 }) {
   return (
     <View>
-      {!!errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
-      <TextField label="Usuario" value={username} onChangeText={setUsername} placeholder="Ingresa tu usuario" keyboardType="username" />
-      <TextField label="Contraseña" value={password} onChangeText={setPassword} placeholder="••••••••" secureTextEntry />
+      {!!authErrorMsg && <Text style={styles.error}>{authErrorMsg}</Text>}
+      <TextField
+        label="Usuario"
+        value={username}
+        onChangeText={setUsername}
+        placeholder="Ingresa tu usuario"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="username"
+        textContentType="username"
+        keyboardType="default"
+        returnKeyType="next"
+      />
+
+      <TextField
+        label="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="••••••••"
+        secureTextEntry
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="password"
+        textContentType="password"
+        returnKeyType="go"
+        onSubmitEditing={onSubmit}
+      />
+      
       <PrimaryButton title="Ingresar" onPress={onSubmit} loading={loading} />
       <TouchableOpacity onPress={onGoRegister} style={{ marginTop: 14 }}>
         <Text style={styles.link}>¿No tenés cuenta? Registrate</Text>

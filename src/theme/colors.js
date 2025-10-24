@@ -1,7 +1,7 @@
 export default {
   bg: "#f4f4f4",
   surface: "#ffffff",
-  surfaceAlt: "#f1f1f1",
+  surfaceAlt: "#f0f0f0",
   text: "#333333",
   textMuted: "#777777",
   dark: "#1e1e1e",

@@ -1,26 +1,59 @@
 import * as api from "@/domain/auth/api/authApi";
+import { getResponseCodes } from "@/utils/httpCodeParser";
+import { isValidUsername, isValidPassword } from "@/domain/auth/utils/authUtils"
 
 export const AuthService = {
   /**
-   * Requests to login (it's required to be logged-in)
+   * Requests to login (can be used without being logged-in)
    * @param {Object} credentials - { username, password }
    * @returns {Promise<Object>} - server response
    */
   async login(credentials) {
-    if (!credentials){
-      throw new Error("credentials' empty in authService.login().");
-    }
+    if (!credentials)
+      throw new Error("Por favor, ingresa un usuario y contraseña.");
+    
+    isValidUsername(credentials.username)
+    isValidPassword(credentials.password)
+    
+    try{
+      const data = await api.loginRequest(credentials);
+      return data;
+    } catch(e){
+      const { status, specificCode } = getResponseCodes(e);
+      
+      if (status == 400 && specificCode == "0411")
+        throw new Error("La cuenta no está activada.");
 
-    if (!credentials?.username) {
-      throw new Error("username's value is empty in authService.login().");
-    }
+      if (status == 404 || (status == 400 && specificCode == "0410"))
+        throw new Error("Usuario o contraseña invalidos.");
+      
 
-    if (!credentials?.password) {
-      throw new Error("password's value is empty in authService.login().");
+      throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
     }
+  },
+  /**
+   * Requests to use otp_token as MFA (can be used without being logged-in)
+   * @param {Object} otp_token - { username, otp_token }
+   * @returns {Promise<Object>} - server response
+   */
+  async loginOtp(userData) {
+    if (!userData || !userData.otp_token)
+      throw new Error("Por favor, ingresa tu código de acceso.");
 
-    const data = await api.loginRequest(credentials);
-    return data;
+    try{
+      const data = await api.loginOtp(userData);
+      return data;
+    } catch(e){
+      const { status, specificCode } = getResponseCodes(e);
+      
+      if (status == 400 && specificCode == "0410")
+        throw new Error("El código ingresado ya expiró. Solicita un nuevo.");
+      
+      if (status == 404)
+        throw new Error("El código ingresado es inválido.");
+
+      throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
+    }
   },
 
   /**
@@ -29,72 +62,70 @@ export const AuthService = {
    * @returns {Promise<Object>} - server response
    */
   async confirmAccount(userData) {
-    if (!userData) {
-      throw new Error("userData's empty in authService.confirmAccount().");
-    }
-    
-    if (!userData?.username) {
-      throw new Error("username's value is empty in authService.confirmAccount().");
-    }
+    try{
+      const data = await api.confirmAccount(userData);
+      return data;
+    } catch(e){
+      const { status, specificCode } = getResponseCodes(e);
+      
+      if (status == 400 && specificCode == "0410")
+        throw new Error("El código ingresado ya expiró. Solicita un nuevo.");
+      
+      if (status == 404)
+        throw new Error("El código ingresado es inválido.");
 
-    if (!userData?.otpToken) {
-      throw new Error("otpToken's value is empty in authService.confirmAccount().");
+      throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
     }
-
-    const data = await api.confirmAccount(userData);
-    return data;
-  },
-
-  /**
-   * Requests to use otpToken as MFA (can be used without being logged-in)
-   * @param {Object} otpToken - { otpToken }
-   * @returns {Promise<Object>} - server response
-   */
-  async loginOtp(otpToken) {
-    if (!otpToken) {
-      throw new Error("otpToken's empty in authService.loginOtp().");
-    }
-
-    const data = await api.loginOtp(otpToken);
-    return data;
   },
 
   /**
    * Requests to recover user's account (can be used without being logged-in)
-   * @param {Object} userData - { username, newPassword, otpToken }
+   * @param {Object} username - { username }
    * @returns {Promise<Object>} - server response
    */
-  async recoverAccount(userData) {
-    if (!userData) {
-      throw new Error("userData's empty in authService.recoverAccount().");
-    }
+  async recoverAccount(username) {
+    isValidUsername(username.username)
 
-    if (!userData?.username) {
-      throw new Error("username's value is empty in authService.recoverAccount().");
-    }
+    try{
+      const data = await api.recoverAccount(username);
+      return data;
+    } catch(e){
+      const { status, specificCode } = getResponseCodes(e);
 
-    if (!userData?.newPassword) {
-      throw new Error("newPassword's value is empty in authService.recoverAccount().");
-    }
+      if (status == 404 && specificCode == "0404")
+        throw new Error("El usuario ingresado no existe.");
 
-    if (!userData?.otpToken) {
-      throw new Error("otpToken's value is empty in authService.recoverAccount().");
+      throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
     }
-
-    const data = await api.recoverAccount(userData);
-    return data;
   },
 
   /**
-   * Requests to refresh user's jwtToken (it's required to be logged-in)
+   * Requests to update account's password (can be used without being logged-in)
+   * @param {Object} userData - { username, new_password, otp_token }
+   * @returns {Promise<Object>} - server response
+   */
+  async recoverAccountOtp(userData) {
+    try{
+      const data = await api.recoverAccountOtp(userData);
+      return data;
+    } catch(e){
+      const { status, specificCode } = getResponseCodes(e);
+      
+      if (status == 400 && specificCode == "0410")
+        throw new Error("El código ingresado ya expiró. Solicita un nuevo.");
+      
+      if (status == 404 && specificCode == "0405")
+        throw new Error("El código ingresado es inválido.");
+
+      throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
+    }
+  },
+  /**
+   * Requests to refresh user's jwtToken
    * @param {Object} jwtToken - { jwtToken }
    * @returns {Promise<Object>} - server response
    */
   async refreshToken(jwtToken) {
-    if (!jwtToken) {
-      throw new Error("jwtToken's empty in authService.refreshToken().");
-    }
-
     const data = await api.refreshToken(jwtToken);
     return data;
   },

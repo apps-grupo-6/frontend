@@ -17,14 +17,17 @@ const recoverAccount = (userData) => {
   return api.post(`${BASE_URL}/recover`, userData);
 };
 
+const recoverAccountOtp = (userData) => {
+  return api.post(`${BASE_URL}/recoverOtp`, userData);
+};
+
 const refreshToken = (jwt_token) => {
   return api.post(`${BASE_URL}/refresh`, jwt_token);
 };
 
 export {
-  loginRequest,
+  loginRequest, loginOtp,
   confirmAccount,
-  loginOtp,
-  recoverAccount,
+  recoverAccount, recoverAccountOtp,
   refreshToken
 };

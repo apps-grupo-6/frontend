@@ -1,37 +1,60 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import AuthLayout from "@/domain/auth/components/layout";
+import WindowLayout from "@/components/layouts/windowLayout";
 import LoginForm from "@/domain/auth/components/loginForm";
-import OtpModal from "@/domain/auth/components/otpModal";
-import { useLogin } from "@/domain/auth/hooks/useLogin";
+import useLogin from "@/domain/auth/hooks/useLogin";
+import useOtp from "@/domain/otp/hooks/useOtp";
+import OtpModal from "@/domain/otp/components/otpModal";
 
 export default function LoginScreen({ navigation }) {
+  const { username, setUsername, password, setPassword, loading, authErrorMsg, submitLogin } = useLogin();
   const {
-    username, setUsername, password, setPassword,
-    otp_token, setOtp, loading, errorMsg, showOtp, setShowOtp,
-    submitLogin, submitOtp, recover,
-  } = useLogin();
+    showOtp, setShowOtp,
+    otp_token, setOtp,
+    otpErrorMsg,
+    loadingOtp,
+    startOtp, 
+    submitOtp,
+    resendOtp,
+  } = useOtp({ username, onSuccess: () => navigation.replace("Home") });
 
+  const goRegister = () => navigation.navigate("Register");
+  const goRecover = () => navigation.navigate("Recover");
+
+  const handleSubmitLogin = async () => {
+    const ok = await submitLogin();
+    if (ok) {
+      await startOtp({type: "LOGIN"}, false);
+    }
+  };
+
+  const handleConfirmOtp = async () => {
+    await submitOtp();
+  };
+  
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <AuthLayout>
+      <WindowLayout title="Inicio de sesión">
         <LoginForm
           username={username} setUsername={setUsername}
           password={password} setPassword={setPassword}
-          onSubmit={submitLogin}
-          onGoRegister={() => navigation?.navigate?.("Register")}
-          onRecover={recover}
+          onSubmit={handleSubmitLogin}
+          onGoRegister={goRegister}
+          onRecover={goRecover}
           loading={loading}
-          errorMsg={errorMsg}
+          authErrorMsg={authErrorMsg}
         />
-      </AuthLayout>
+      </WindowLayout>
 
       <OtpModal
         visible={showOtp}
         otp_token={otp_token}
         setOtp={setOtp}
-        onConfirm={submitOtp}
+        onConfirm={handleConfirmOtp}
         onClose={() => setShowOtp(false)}
-        loading={loading}
+        onResend={resendOtp}
+        loading={loadingOtp}
+        otpErrorMsg={otpErrorMsg}
+        title="Validación de acceso"
       />
     </SafeAreaView>
   );
