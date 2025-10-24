@@ -1,19 +1,48 @@
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import TextField from "@/components/ui/TextField";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import OtpInput from "@/domain/otp/components/otpInput";
 import colors from "@/theme/colors";
 
-export default function OtpModal({ visible, otp_token, setOtp, onConfirm, onClose, onResend, loading, otpErrorMsg, title }) {
+export default function OtpModal({
+  visible,
+  otp_token,
+  setOtp,
+  onConfirm,
+  onClose,
+  onResend,
+  loading,
+  otpErrorMsg,
+  title,
+  subtitle = "Ingresá el código de 6 dígitos que te enviamos.",
+}) {
+  const canConfirm = (otp_token ?? "").toString().trim().length === 6 && !loading;
+
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
+          {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           {!!otpErrorMsg && <Text style={styles.error}>{otpErrorMsg}</Text>}
-          <TextField label="Código" value={otp_token} onChangeText={setOtp} placeholder="123456" keyboardType="numeric" />
-          <PrimaryButton title="Confirmar" onPress={onConfirm} loading={loading} />
-          <PrimaryButton title="Reenviar" onPress={onResend} loading={loading}/>
-          <TouchableOpacity onPress={onClose} style={{ marginTop: 12 }}>
+
+          <OtpInput value={otp_token} onChange={setOtp} length={6} autoFocus />
+
+          <PrimaryButton
+            title="Confirmar"
+            onPress={onConfirm}
+            loading={loading}
+            disabled={!canConfirm}
+            style={{ marginTop: 4 }}
+          />
+          <PrimaryButton
+            title="Reenviar"
+            onPress={onResend}
+            loading={loading}
+            variant="secondary"
+            style={{ marginTop: 10 }}
+          />
+
+          <TouchableOpacity onPress={onClose} style={styles.cancelContainer}>
             <Text style={styles.link}>Cancelar</Text>
           </TouchableOpacity>
         </View>
@@ -21,10 +50,54 @@ export default function OtpModal({ visible, otp_token, setOtp, onConfirm, onClos
     </Modal>
   );
 }
+
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "center", padding: 16, alignItems: "center"  },
-  card: { backgroundColor: colors.surface, borderRadius: 12, padding: 20 },
-  title: { fontSize: 18, fontWeight: "700", color: colors.text, marginBottom: 10 },
-  link: { color: colors.primary, textAlign: "center", fontWeight: "600" },
-  error: { color: colors.primary, marginBottom: 10 },
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "center",
+    padding: 16,
+    alignItems: "center",
+  },
+  card: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.text,
+    textAlign: "center",
+  },
+  subtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  error: {
+    marginTop: 10,
+    marginBottom: 4,
+    color: "#ef4444",
+    textAlign: "center",
+    fontWeight: "600",
+  },cancelContainer: {
+    marginTop: 18,
+    marginBottom: 4,
+  },
+  link: {
+    color: colors.primary,
+    textAlign: "center",
+    fontWeight: "700",
+  },
 });
