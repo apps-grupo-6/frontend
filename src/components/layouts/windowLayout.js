@@ -30,7 +30,9 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
     elevation: 4,
-    width: "500px"
+    width: "500px",
+    minWidth: 350,
+    maxWidth: 420,
   },
   header: { backgroundColor: colors.dark, paddingVertical: 24, alignItems: "center" },
   headerTitle: { color: colors.surface, fontSize: 22, fontWeight: "700", letterSpacing: 1.2, textTransform: "uppercase" },

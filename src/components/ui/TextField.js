@@ -20,7 +20,6 @@ export default function TextField({
       <TextInput
         style={[
           styles.input,
-          styles,
           !editable && styles.inputDisabled,
         ]}
         placeholder={placeholder}

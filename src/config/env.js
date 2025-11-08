@@ -1,6 +1,7 @@
-import Constants from "expo-constants";
+import { Platform } from "react-native";
 
-const extra = Constants.expoConfig.extra;
+const HOST = Platform.OS === "android" ? process.env.EXPO_PUBLIC_API_URL_ANDROID : process.env.EXPO_PUBLIC_API_URL_WEB;
+
 export default {
-  apiUrl: extra.API_URL,
+  apiUrl: HOST,
 };

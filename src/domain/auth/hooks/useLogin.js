@@ -12,10 +12,13 @@ export default function useLogin() {
       setAuthErrorMsg("");
       setLoading(true);
       await AuthService.login({ username, password });
-      return true;
+      return 0;
     } catch (e) {
+      if( e.message === "La cuenta no está activada.")
+        return 1;
+
       setAuthErrorMsg(e.message);
-      return false;
+      return -1;
     } finally {
       setLoading(false);
     }

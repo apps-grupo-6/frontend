@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import WindowLayout from "@/components/layouts/windowLayout";
 import LoginForm from "@/domain/auth/components/loginForm";
@@ -15,15 +17,20 @@ export default function LoginScreen({ navigation }) {
     startOtp, 
     submitOtp,
     resendOtp,
-  } = useOtp({ username, onSuccess: () => navigation.replace("Home") });
+  } = useOtp({ username });
 
   const goRegister = () => navigation.navigate("Register");
-  const goRecover = () => navigation.navigate("Recover");
+  const goRecover = () => navigation.navigate("Recover");  
+  const [otpTitle, setOtpTitle] = useState("");
 
   const handleSubmitLogin = async () => {
     const ok = await submitLogin();
-    if (ok) {
+    if (ok === 0) {
+      setOtpTitle("Validación de acceso")
       await startOtp({type: "LOGIN"}, false);
+    } else if (ok === 1){
+      setOtpTitle("Activación de cuenta pendiente")
+      await startOtp({type: "REGISTRATION"}, false);
     }
   };
 
@@ -54,7 +61,7 @@ export default function LoginScreen({ navigation }) {
         onResend={resendOtp}
         loading={loadingOtp}
         otpErrorMsg={otpErrorMsg}
-        title="Validación de acceso"
+        title={otpTitle}
       />
     </SafeAreaView>
   );

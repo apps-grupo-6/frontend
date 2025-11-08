@@ -26,7 +26,7 @@ export const UsersService = {
     
     const telephoneLength = userData.telephone.length
     if (telephoneLength < 8 || telephoneLength > 14)
-      throw new Error(`El número de teléfono que ingresó tiene ${usernameLength} caracteres y debe tener entre 8 y 14.`);
+      throw new Error(`El número de teléfono que ingresó tiene ${telephoneLength} caracteres y debe tener entre 8 y 14.`);
 
     if (!/^\d+$/.test(userData.telephone))
       throw new Error("El número de teléfono solo puede contener números.");

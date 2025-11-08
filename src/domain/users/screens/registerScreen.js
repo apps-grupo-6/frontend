@@ -16,7 +16,7 @@ export default function RegisterScreen({ navigation }) {
     submitOtp,
     resendOtp,
     startOtp
-  } = useOtp({ username: form.username, onSuccess: () => navigation.replace("Home") });
+  } = useOtp({ username: form.username, onSuccess: () => navigation.replace("Login") });
 
   const goLogin = () => navigation.navigate("Login");
 

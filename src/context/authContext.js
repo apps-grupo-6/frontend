@@ -6,25 +6,32 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState("");
     const tokenRef = useRef("");
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const setAuthToken = (t) => {
-        tokenRef.current = t || "";
-        setToken(t || "");
+    const setAuthToken = (token) => {
+        const safe = token || "";
+
+        tokenRef.current = safe;
+        setToken(safe);
+    };
+
+    const login = async (token) => {
+        setAuthToken(token);
+        setIsAuthenticated(true);
+    }
+
+    const logout = () => { 
+        setAuthToken(""); 
+        setIsAuthenticated(false);
     };
 
     useEffect(() => {
         const id = api.interceptors.request.use((config) => {
-        
             const current = tokenRef.current;   
 
             if (current != "") {
-                if (!config.headers) config.headers = {};
-
-                if (typeof config.headers.set === 'function') {
-                    config.headers.set('Authorization', `Bearer ${current}`);
-                } else {
-                    config.headers = { ...config.headers, Authorization: `Bearer ${current}` };
-                }
+                if (!config.headers) 
+                    config.headers = {};
 
                 config.headers.Authorization = `Bearer ${current}`;
             } 
@@ -35,9 +42,7 @@ export const AuthProvider = ({ children }) => {
         return () => api.interceptors.request.eject(id);
     }, []);
 
-    const logout = () => { setToken(""); };
-
-    const value = useMemo(() => ({ token, setToken, logout, setAuthToken }), [token]);
+    const value = useMemo(() => ({ token, isAuthenticated, login, logout, setAuthToken }), [token, isAuthenticated]);
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

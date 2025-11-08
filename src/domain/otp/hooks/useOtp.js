@@ -3,8 +3,8 @@ import { AuthService } from "@/domain/auth/services/authService";
 import { OtpService } from "@/domain/otp/services/otpService";
 import { useAuth } from "@/context/authContext";
 
-export default function useOtp({ username = null, new_password = null, onSuccess } = {}) {
-    const { setAuthToken } = useAuth();
+export default function useOtp({ username = null, new_password = null, onSuccess = null } = {}) {
+    const { login } = useAuth();
 
     const [showOtp, setShowOtp] = useState(false);
     const [otp_token, setOtp] = useState("");
@@ -54,7 +54,7 @@ export default function useOtp({ username = null, new_password = null, onSuccess
                     case "LOGIN":
                         const response = await AuthService.loginOtp({ username, otp_token });
                         const token = response.data.token
-                        setAuthToken(token)
+                        login(token)
                         break;
 
                     case "REGISTRATION":
@@ -71,7 +71,8 @@ export default function useOtp({ username = null, new_password = null, onSuccess
 
                 setShowOtp(false);
                 setOtp("")
-                onSuccess();
+                if (onSuccess)
+                    onSuccess();
 
             } catch (e) {
                 setOtpErrorMsg(e.message);

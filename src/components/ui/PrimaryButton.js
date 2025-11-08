@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
   },
   primary: {
     backgroundColor: colors.primary,
+    marginTop: 5
   },
   secondary: {
     backgroundColor: "#fff",

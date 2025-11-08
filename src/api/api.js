@@ -5,6 +5,10 @@ import { logApiResponse } from "@/core/logger";
 const api = axios.create({
   baseURL: env.apiUrl,
   timeout: 10000,
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json"
+  },
 });
 
 api.interceptors.response.use(
@@ -12,8 +16,14 @@ api.interceptors.response.use(
     logApiResponse(response)
     return response.data;
   },
-  (error) => {
+  async (error) => {
     logApiResponse(error)
+    const response = error.response.status;
+
+    if (response === 401 || response === 403) {          
+      await logout();
+    }
+
     return Promise.reject(error);
   }
 );
