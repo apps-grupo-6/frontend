@@ -1,7 +1,7 @@
-import { Platform } from "react-native";
+import Constants from "expo-constants";
 
-const HOST = Platform.OS === "android" ? process.env.EXPO_PUBLIC_API_URL_ANDROID : process.env.EXPO_PUBLIC_API_URL_WEB;
-
+const extra = Constants.expoConfig.extra;
 export default {
-  apiUrl: HOST,
+  apiUrl: extra.API_URL,
+  useMocks: String(extra.USE_MOCKS).toLowerCase() === "true",
 };

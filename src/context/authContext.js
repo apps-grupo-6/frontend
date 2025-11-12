@@ -34,7 +34,23 @@ export const AuthProvider = ({ children }) => {
                     config.headers = {};
 
                 config.headers.Authorization = `Bearer ${current}`;
-            } 
+            }
+
+            // Ensure Content-Type is set correctly per method
+            const method = (config.method || 'get').toLowerCase();
+            const isGetLike = ["get", "delete", "head", "options"].includes(method);
+
+            if (isGetLike) {
+                // Remove Content-Type for read-only methods to avoid 415
+                delete config.headers['Content-Type'];
+                delete config.headers['content-type'];
+            } else {
+                // For write methods, set JSON if not FormData
+                const isFormData = (typeof FormData !== 'undefined') && (config.data instanceof FormData);
+                if (!isFormData && !config.headers['Content-Type']) {
+                    config.headers['Content-Type'] = 'application/json';
+                }
+            }
 
             return config;
         });

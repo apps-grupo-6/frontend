@@ -1,6 +1,8 @@
 import * as api from "@/domain/users/api/usersApi";
 import { getResponseCodes } from "@/utils/httpCodeParser";
 import { isValidUsername, isValidPassword } from "@/domain/auth/utils/authUtils"
+import env from "@/config/env";
+import { me as mockMe } from "@/domain/users/mocks/usersMocks";
 
 export const UsersService = {
   /**
@@ -48,6 +50,37 @@ export const UsersService = {
         throw new Error("El usuario ingresado ya existe.")
 
       throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
+    }
+  }
+  ,
+  /**
+   * Get current user information
+   */
+  async getMe() {
+    try {
+      if (env.useMocks) return mockMe;
+      const res = await api.getMe();
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      throw new Error("No pudimos obtener tus datos.");
+    }
+  }
+  ,
+  /**
+   * Update current user information
+   * @param {Object} payload
+   */
+  async updateMe(payload) {
+    try {
+      const res = await api.updateMe(payload);
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 400) throw new Error("Revisá los datos ingresados.");
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      throw new Error("No pudimos actualizar tus datos.");
     }
   }
 }

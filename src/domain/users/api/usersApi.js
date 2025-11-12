@@ -8,3 +8,7 @@ const register = async (userData) => {
 export {
   register
 };
+
+// New endpoints (auth required)
+export const getMe = async () => api.get(`${BASE_URL}/`);
+export const updateMe = async (payload) => api.put(`${BASE_URL}/`, payload);

@@ -5,6 +5,7 @@ import LoginScreen from "@/domain/auth/screens/loginScreen";
 import RecoverScreen from "@/domain/auth/screens/recoverScreen";
 import RegisterScreen from "@/domain/users/screens/registerScreen";
 import HomeScreen from "@/domain/home/screen/homeScreen";
+import ProfileScreen from "@/domain/users/screens/profileScreen";
 
 const Stack = createNativeStackNavigator();
 function AuthStack() {
@@ -21,6 +22,7 @@ function AppStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 }
