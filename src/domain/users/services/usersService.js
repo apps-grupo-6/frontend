@@ -59,7 +59,9 @@ export const UsersService = {
   async getMe() {
     try {
       if (env.useMocks) return mockMe;
+      console.log('getme')
       const res = await api.getMe();
+      console.log(res)
       return res?.data ?? res;
     } catch (e) {
       const { status } = getResponseCodes(e);

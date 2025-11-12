@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, ScrollView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import colors from "@/theme/colors";
 import useUserInfo from "@/domain/users/hooks/useUserInfo";
 import useUpcomingClasses from "@/domain/classes/hooks/useUpcomingClasses";
@@ -47,6 +48,7 @@ function ProfileData({ user }) {
 
 export default function ProfileScreen() {
   const [tab, setTab] = useState("data");
+  const navigation = useNavigation();
 
   const { data: me, loading: loadingMe, error: errorMe } = useUserInfo();
   const { data: upcoming, loading: loadingUpcoming, error: errorUpcoming, refresh: refetchUpcoming } =
@@ -88,8 +90,13 @@ export default function ProfileScreen() {
           ) : (
             <FlatList
               data={upcoming || []}
-              keyExtractor={(item, idx) => String(item?.id ?? idx)}
-              renderItem={({ item }) => <ClassItem item={item} />}
+              keyExtractor={(item, idx) => String(item?.id ?? item?.class_id ?? idx)}
+              renderItem={({ item }) => (
+                <ClassItem
+                  item={item}
+                  onPress={() => navigation.navigate("ClassDetail", { classId: item?.id ?? item?.class_id })}
+                />
+              )}
               onRefresh={refetchUpcoming}
               refreshing={loadingUpcoming}
               ListEmptyComponent={<Text style={styles.empty}>No tenés clases programadas.</Text>}
@@ -108,8 +115,13 @@ export default function ProfileScreen() {
           ) : (
             <FlatList
               data={history || []}
-              keyExtractor={(item, idx) => String(item?.id ?? idx)}
-              renderItem={({ item }) => <ClassItem item={item} />}
+              keyExtractor={(item, idx) => String(item?.id ?? item?.class_id ?? idx)}
+              renderItem={({ item }) => (
+                <ClassItem
+                  item={item}
+                  onPress={() => navigation.navigate("ClassDetail", { classId: item?.id ?? item?.class_id })}
+                />
+              )}
               onRefresh={refetchHistory}
               refreshing={loadingHistory}
               ListEmptyComponent={<Text style={styles.empty}>Aún no hay historial.</Text>}

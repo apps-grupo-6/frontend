@@ -5,10 +5,13 @@ const register = async (userData) => {
     return api.post(`${BASE_URL}/`, userData);
 };
 
-export {
-  register
-};
+
 
 // New endpoints (auth required)
 export const getMe = async () => api.get(`${BASE_URL}/`);
 export const updateMe = async (payload) => api.put(`${BASE_URL}/`, payload);
+
+
+export {
+  register
+};

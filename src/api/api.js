@@ -11,6 +11,9 @@ const api = axios.create({
   },
 });
 
+// Prefer JSON responses by default
+api.defaults.headers.common['Accept'] = 'application/json';
+
 api.interceptors.response.use(
   (response) => {
     logApiResponse(response)

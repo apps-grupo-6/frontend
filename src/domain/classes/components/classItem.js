@@ -1,30 +1,55 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import colors from "@/theme/colors";
 
-function formatDate(d) {
+function toDateSafe(value) {
+  if (!value) return null;
   try {
-    const date = new Date(d);
-    if (isNaN(date)) return String(d);
-    return date.toLocaleString();
+    const iso = typeof value === "string" ? value.replace(" ", "T") : value;
+    const d = new Date(iso);
+    return isNaN(d) ? null : d;
   } catch {
-    return String(d);
+    return null;
   }
 }
 
-export default function ClassItem({ item }) {
-  const title = item?.name || item?.title || item?.class_name || `Clase #${item?.id ?? "-"}`;
-  const rawDate = item?.scheduled_at || item?.date || item?.start_time || item?.datetime;
-  const instructor = item?.instructor?.name || item?.teacher?.name || item?.coach || item?.trainer;
-  const status = item?.status;
+function formatDate(value) {
+  const d = toDateSafe(value);
+  if (!d) return String(value ?? "");
+  return d.toLocaleString();
+}
 
-  return (
+export default function ClassItem({ item, onPress }) {
+  // Campos esperados desde backend de lista de clases del usuario
+  const discipline = item?.class_discipline_name; // Puede no venir en este endpoint
+  const professorFirst = item?.professor_first_name;
+  const professorLast = item?.professor_last_name;
+  const professorFull = [professorFirst, professorLast].filter(Boolean).join(" ");
+  const rawDate = item?.class_scheduled_at;
+  const participantStatus = item?.participant_status;
+
+  // Título: disciplina > "Clase con {profesor}" > "Clase"
+  const title =
+    (discipline && discipline.trim()) ||
+    (professorFull ? `Clase con ${professorFull}` : "Clase");
+
+  const content = (
     <View style={styles.card}>
       <Text style={styles.title}>{title}</Text>
-      {rawDate ? <Text style={styles.subtitle}>{formatDate(rawDate)}</Text> : null}
-      {instructor ? <Text style={styles.meta}>Profesor: {instructor}</Text> : null}
-      {status ? <Text style={styles.badge}>{status}</Text> : null}
+      {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
+      {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
+      {participantStatus ? <Text style={styles.badge}>{participantStatus}</Text> : null}
     </View>
   );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} android_ripple={{ color: colors.surfaceAlt }}>
+        {content}
+      </Pressable>
+    );
+  }
+
+  return content;
 }
 
 const styles = StyleSheet.create({

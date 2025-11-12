@@ -1,6 +1,5 @@
 import api from "@/api/api";
-
-const BASE_URL = "/classes";
+import { BASE_URL } from "@/domain/classes/config/constants";
 
 const getUpcoming = async () => api.get(`${BASE_URL}/upcoming`);
 
@@ -11,4 +10,7 @@ const getHistory = async (since, until) => {
   return api.get(url);
 };
 
+const getClass = async (id) => api.get(`${BASE_URL}/${id}`);
+
 export { getUpcoming, getHistory };
+export { getClass };
