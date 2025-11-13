@@ -51,4 +51,32 @@ export const ClassesService = {
       throw new Error("No pudimos obtener el detalle de la clase.");
     }
   },
+
+  async confirm(id) {
+    try {
+      if (env.useMocks) return { success: true, message: "Presencia confirmada (mock)" };
+      const res = await api.confirmClass(id);
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      if (status === 404) throw new Error("Clase no encontrada.");
+      if (status === 409) throw new Error("No podés confirmar esta clase (cupo completo o ya confirmada).");
+      throw new Error("No pudimos confirmar tu presencia.");
+    }
+  },
+
+  async cancel(id) {
+    try {
+      if (env.useMocks) return { success: true, message: "Clase cancelada (mock)" };
+      const res = await api.cancelClass(id);
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      if (status === 404) throw new Error("Clase no encontrada.");
+      if (status === 409) throw new Error("No podés cancelar esta clase.");
+      throw new Error("No pudimos cancelar tu inscripción.");
+    }
+  },
 };

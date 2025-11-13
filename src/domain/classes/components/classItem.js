@@ -1,5 +1,9 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import colors from "@/theme/colors";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import { ClassesService } from "@/domain/classes/services/classesService";
+import { toSpanishClassStatus, toSpanishParticipantStatus, canCancelFromParticipantStatus, canConfirmFromParticipantStatus } from "@/domain/classes/utils/statusUtils";
+import React, { useState } from "react";
 
 function toDateSafe(value) {
   if (!value) return null;
@@ -18,7 +22,7 @@ function formatDate(value) {
   return d.toLocaleString();
 }
 
-export default function ClassItem({ item, onPress }) {
+export default function ClassItem({ item, onPress, onActionDone, showActions = true }) {
   // Campos esperados desde backend de lista de clases del usuario
   const discipline = item?.class_discipline_name; // Puede no venir en este endpoint
   const professorFirst = item?.professor_first_name;
@@ -26,6 +30,15 @@ export default function ClassItem({ item, onPress }) {
   const professorFull = [professorFirst, professorLast].filter(Boolean).join(" ");
   const rawDate = item?.class_scheduled_at;
   const participantStatus = item?.participant_status;
+  const classStatus = item?.class_status || item?.status;
+  const displayStatus = toSpanishParticipantStatus(participantStatus) || toSpanishClassStatus(classStatus);
+  const classId = item?.id ?? item?.class_id;
+
+  const canConfirm = canConfirmFromParticipantStatus(participantStatus);
+  const canCancel = canCancelFromParticipantStatus(participantStatus);
+
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
+  const [loadingCancel, setLoadingCancel] = useState(false);
 
   // Título: disciplina > "Clase con {profesor}" > "Clase"
   const title =
@@ -37,7 +50,62 @@ export default function ClassItem({ item, onPress }) {
       <Text style={styles.title}>{title}</Text>
       {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
       {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
-      {participantStatus ? <Text style={styles.badge}>{participantStatus}</Text> : null}
+      {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
+
+      {showActions && (canConfirm || canCancel) && (
+        <View style={styles.actions}>
+          {canConfirm && (
+            <PrimaryButton
+              title="Confirmar presencia"
+              loading={loadingConfirm}
+              onPress={async () => {
+                try {
+                  setLoadingConfirm(true);
+                  await ClassesService.confirm(classId);
+                  Alert.alert("Éxito", "Tu presencia fue confirmada.");
+                  onActionDone && onActionDone();
+                } catch (e) {
+                  Alert.alert("Error", e.message || "No pudimos confirmar tu presencia.");
+                } finally {
+                  setLoadingConfirm(false);
+                }
+              }}
+            />
+          )}
+          {canCancel && (
+            <PrimaryButton
+              title="Cancelar"
+              variant="secondary"
+              loading={loadingCancel}
+              onPress={() => {
+                Alert.alert(
+                  "Cancelar clase",
+                  "¿Estás seguro de que querés cancelar tu inscripción?",
+                  [
+                    { text: "No", style: "cancel" },
+                    {
+                      text: "Sí, cancelar",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          setLoadingCancel(true);
+                          await ClassesService.cancel(classId);
+                          Alert.alert("Cancelado", "Tu inscripción fue cancelada.");
+                          onActionDone && onActionDone();
+                        } catch (e) {
+                          Alert.alert("Error", e.message || "No pudimos cancelar tu inscripción.");
+                        } finally {
+                          setLoadingCancel(false);
+                        }
+                      },
+                    },
+                  ]
+                );
+              }}
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 
@@ -75,5 +143,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     overflow: "hidden",
+  },
+  actions: {
+    marginTop: 12,
+    gap: 8,
   },
 });

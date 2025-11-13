@@ -26,6 +26,7 @@ function Segmented({ value, onChange, options }) {
 }
 
 function ProfileData({ user }) {
+  const navigation = useNavigation();
   if (!user) return null;
   const rows = [
     { label: "Usuario", value: user.username },
@@ -35,13 +36,21 @@ function ProfileData({ user }) {
   ].filter((r) => r.value);
 
   return (
-    <View style={styles.card}>
-      {rows.map((r) => (
-        <View key={r.label} style={styles.row}>
-          <Text style={styles.rowLabel}>{r.label}</Text>
-          <Text style={styles.rowValue}>{r.value}</Text>
-        </View>
-      ))}
+    <View>
+      <View style={styles.card}>
+        {rows.map((r) => (
+          <View key={r.label} style={styles.row}>
+            <Text style={styles.rowLabel}>{r.label}</Text>
+            <Text style={styles.rowValue}>{r.value}</Text>
+          </View>
+        ))}
+      </View>
+      <TouchableOpacity 
+        style={styles.editButton}
+        onPress={() => navigation.navigate("EditProfile")}
+      >
+        <Text style={styles.editButtonText}>Editar mis datos</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -95,6 +104,8 @@ export default function ProfileScreen() {
                 <ClassItem
                   item={item}
                   onPress={() => navigation.navigate("ClassDetail", { classId: item?.id ?? item?.class_id })}
+                  onActionDone={refetchUpcoming}
+                  showActions={true}
                 />
               )}
               onRefresh={refetchUpcoming}
@@ -120,6 +131,7 @@ export default function ProfileScreen() {
                 <ClassItem
                   item={item}
                   onPress={() => navigation.navigate("ClassDetail", { classId: item?.id ?? item?.class_id })}
+                  showActions={false}
                 />
               )}
               onRefresh={refetchHistory}
@@ -172,4 +184,13 @@ const styles = StyleSheet.create({
   rowValue: { color: colors.text, fontSize: 16, fontWeight: "600", marginTop: 2 },
   error: { color: "#b00020", textAlign: "center", marginTop: 24, paddingHorizontal: 16 },
   empty: { color: colors.textMuted, textAlign: "center", marginTop: 24 },
+  editButton: {
+    backgroundColor: colors.primary,
+    marginHorizontal: 16,
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  editButtonText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });

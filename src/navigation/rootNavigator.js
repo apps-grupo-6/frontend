@@ -6,6 +6,7 @@ import RecoverScreen from "@/domain/auth/screens/recoverScreen";
 import RegisterScreen from "@/domain/users/screens/registerScreen";
 import HomeScreen from "@/domain/home/screen/homeScreen";
 import ProfileScreen from "@/domain/users/screens/profileScreen";
+import EditProfileScreen from "@/domain/users/screens/editProfileScreen";
 import ClassDetailScreen from "@/domain/classes/screens/classDetailScreen";
 
 const Stack = createNativeStackNavigator();
@@ -24,6 +25,7 @@ function AppStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: true, title: "Editar Perfil" }} />
   <Stack.Screen name="ClassDetail" component={ClassDetailScreen} options={{ headerShown: true, title: "Detalle de Clase" }} />
     </Stack.Navigator>
   );
