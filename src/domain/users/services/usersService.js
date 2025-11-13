@@ -1,8 +1,6 @@
 import * as api from "@/domain/users/api/usersApi";
 import { getResponseCodes } from "@/utils/httpCodeParser";
 import { isValidUsername, isValidPassword } from "@/domain/auth/utils/authUtils"
-import env from "@/config/env";
-import { me as mockMe } from "@/domain/users/mocks/usersMocks";
 
 export const UsersService = {
   /**
@@ -58,10 +56,7 @@ export const UsersService = {
    */
   async getMe() {
     try {
-      if (env.useMocks) return mockMe;
-      console.log('getme')
       const res = await api.getMe();
-      console.log(res)
       return res?.data ?? res;
     } catch (e) {
       const { status } = getResponseCodes(e);
