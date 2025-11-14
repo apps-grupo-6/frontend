@@ -1,32 +1,177 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from "react";
 import colors from "@/theme/colors";
+import Navbar from "@/components/ui/Navbar";
+import Dropdown from "@/components/ui/Dropdown";
+import ClassCard from "@/domain/home/components/ClassCard";
+import useClasses from "@/domain/home/hooks/useClasses";
+import useLocations from "@/domain/home/hooks/useLocations";
+
+const TIME_RANGES = ['Todos los horarios', 'Mañana (6:00 - 12:00)', 'Mediodía (12:00 - 16:00)', 'Tarde (16:00 - 20:00)', 'Noche (20:00 - 24:00)'];
+const ALL_GYMS = 'Todos los gimnasios';
+const ALL_TIMES = 'Todos los horarios';
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const [selectedGym, setSelectedGym] = useState(null);
+  const [selectedTimeRange, setSelectedTimeRange] = useState(null);
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.text}>Home</Text>
-            <TouchableOpacity
-                style={styles.profileButton}
-                onPress={() => navigation.navigate("Profile")}
-            >
-                <Text style={styles.buttonText}>Mi perfil</Text>
-            </TouchableOpacity>
+  const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder } = useClasses(selectedGym, selectedTimeRange);
+  const { gymNames, error: locationsError } = useLocations();
+
+  const handleReserve = (classData) => alert(`Reserva de clase: ${classData.class_discipline_name}`);
+  const handleGymSelect = (gymName) => setSelectedGym(gymName === ALL_GYMS ? null : gymName);
+  const handleTimeRangeSelect = (timeRange) => setSelectedTimeRange(timeRange === ALL_TIMES ? null : timeRange);
+
+  const renderFilterBadge = (icon, text, onClear) => (
+    <View style={styles.filterBadge}>
+      <Text style={styles.filterBadgeText}>{icon} {text}</Text>
+      <TouchableOpacity onPress={onClear} style={styles.clearFilterButton}>
+        <Text style={styles.clearFilterText}>✕</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <Navbar />
+      <View style={styles.container}>
+        {/* Header con título y botón de ordenamiento */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Nuestras Clases</Text>
+          <TouchableOpacity
+            style={styles.sortButton}
+            onPress={toggleOrder}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sortButtonText}>
+              {isDescending ? '↑ Próximas' : '↓ Próximas'}
+            </Text>
+          </TouchableOpacity>
         </View>
-    );
+
+        <View style={styles.filtersSection}>
+          <Dropdown
+            label="Filtrar por Gimnasio"
+            options={[ALL_GYMS, ...gymNames]}
+            selectedValue={selectedGym || ALL_GYMS}
+            onSelect={handleGymSelect}
+          />
+          {locationsError && <Text style={styles.filterError}>No se pudieron cargar los gimnasios</Text>}
+
+          <Dropdown
+            label="Filtrar por Horario"
+            options={TIME_RANGES}
+            selectedValue={selectedTimeRange || ALL_TIMES}
+            onSelect={handleTimeRangeSelect}
+          />
+
+          {(selectedGym || selectedTimeRange) && (
+            <View style={styles.activeBadgesContainer}>
+              {selectedGym && renderFilterBadge("📍", selectedGym, () => setSelectedGym(null))}
+              {selectedTimeRange && renderFilterBadge("🕐", selectedTimeRange, () => setSelectedTimeRange(null))}
+            </View>
+          )}
+        </View>
+
+        {loading && (
+          <View style={styles.centerContent}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Cargando clases...</Text>
+          </View>
+        )}
+
+        {error && (
+          <View style={styles.centerContent}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        {!loading && !error && classes.length === 0 && (
+          <View style={styles.centerContent}>
+            <Text style={styles.emptyIcon}>📭</Text>
+            <Text style={styles.emptyText}>No hay clases disponibles</Text>
+          </View>
+        )}
+
+        {!loading && !error && classes.length > 0 && (
+          <>
+            <FlatList
+              data={classes}
+              keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+              renderItem={({ item, index }) => (
+                <ClassCard classData={item} onReserve={handleReserve} imageIndex={index} />
+              )}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+            />
+
+            {/* Controles de paginación */}
+            {totalPages > 1 && (
+              <View style={styles.paginationContainer}>
+                <TouchableOpacity
+                  style={[styles.paginationButton, !hasPreviousPage && styles.paginationButtonDisabled]}
+                  onPress={goToPreviousPage}
+                  disabled={!hasPreviousPage}
+                >
+                  <Text style={[styles.paginationButtonText, !hasPreviousPage && styles.paginationButtonTextDisabled]}>
+                    ← Anterior
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.paginationInfo}>
+                  <Text style={styles.paginationText}>
+                    Página {currentPage} de {totalPages}
+                  </Text>
+                  <Text style={styles.paginationSubtext}>
+                    {totalClasses} clases en total
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.paginationButton, !hasNextPage && styles.paginationButtonDisabled]}
+                  onPress={goToNextPage}
+                  disabled={!hasNextPage}
+                >
+                  <Text style={[styles.paginationButtonText, !hasNextPage && styles.paginationButtonTextDisabled]}>
+                    Siguiente →
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
+        )}
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg || "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  text: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: colors.text || "#111",
-  },
+  safeArea: { flex: 1, backgroundColor: colors.dark },
+  container: { flex: 1, backgroundColor: colors.bg, padding: 20 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20},
+  title: { fontSize: 28, fontWeight: "700", color: colors.text, flex: 1 },
+  sortButton: { backgroundColor: colors.primary, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, elevation: 3 },
+  sortButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "600" },
+  filtersSection: { marginBottom: 16 },
+  activeBadgesContainer: { flexDirection: "row", flexWrap: "wrap", marginTop: 8 },
+  filterBadge: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primary + "15", borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: colors.primary, marginBottom: 8 },
+  filterBadgeText: { fontSize: 13, color: colors.text, fontWeight: "500", marginRight: 8 },
+  clearFilterButton: { backgroundColor: colors.primary, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 4 },
+  clearFilterText: { color: "#FFFFFF", fontSize: 12, fontWeight: "600" },
+  filterError: { fontSize: 12, color: colors.primary, marginTop: 4, marginLeft: 4 },
+  centerContent: { flex: 1, alignItems: "center", justifyContent: "center" },
+  loadingText: { fontSize: 16, color: colors.textMuted, marginTop: 12 },
+  errorText: { fontSize: 16, color: colors.primary, textAlign: "center" },
+  emptyIcon: { fontSize: 64, marginBottom: 16 },
+  emptyText: { fontSize: 18, color: colors.textMuted, textAlign: "center" },
+  listContent: { paddingBottom: 20 },
+  paginationContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 20, paddingHorizontal: 10, backgroundColor: colors.surface, borderRadius: 12, marginTop: 10, elevation: 3 },
+  paginationButton: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: colors.primary, borderRadius: 8, minWidth: 100 },
+  paginationButtonDisabled: { backgroundColor: colors.surfaceAlt },
+  paginationButtonText: { color: colors.surface, fontWeight: "600", fontSize: 14, textAlign: "center" },
+  paginationButtonTextDisabled: { color: colors.textMuted },
+  paginationInfo: { alignItems: "center", flex: 1, paddingHorizontal: 10 },
+  paginationText: { fontSize: 16, fontWeight: "600", color: colors.text, marginBottom: 4 },
+  paginationSubtext: { fontSize: 12, color: colors.textMuted },
 });
