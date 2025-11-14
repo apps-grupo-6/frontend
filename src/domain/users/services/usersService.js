@@ -50,4 +50,34 @@ export const UsersService = {
       throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
     }
   }
+  ,
+  /**
+   * Get current user information
+   */
+  async getMe() {
+    try {
+      const res = await api.getMe();
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      throw new Error("No pudimos obtener tus datos.");
+    }
+  }
+  ,
+  /**
+   * Update current user information
+   * @param {Object} payload
+   */
+  async updateMe(payload) {
+    try {
+      const res = await api.updateMe(payload);
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 400) throw new Error("Revisá los datos ingresados.");
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      throw new Error("No pudimos actualizar tus datos.");
+    }
+  }
 }
