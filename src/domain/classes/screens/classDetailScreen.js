@@ -3,7 +3,7 @@ import { View, Text, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity
 import useClassDetail from '@/domain/classes/hooks/useClassDetail';
 import { ClassesService } from '@/domain/classes/services/classesService';
 import colors from '@/theme/colors';
-import { toSpanishClassStatus, toSpanishParticipantStatus, canCancelFromParticipantStatus, canConfirmFromParticipantStatus } from '@/domain/classes/utils/statusUtils';
+import { toSpanishClassStatus, toSpanishParticipantStatus, canConfirmFromParticipantStatus } from '@/domain/classes/utils/statusUtils';
 
 function Line({ label, value }) {
   if (!value) return null;
@@ -31,42 +31,25 @@ export default function ClassDetailScreen({ route }) {
     try {
       setActionLoading(true);
       await ClassesService.confirm(classId);
-      Alert.alert('Éxito', 'Tu presencia fue confirmada.');
+      if (typeof window !== 'undefined') {
+        window.alert('Tu presencia fue confirmada.');
+      } else {
+        Alert.alert('Éxito', 'Tu presencia fue confirmada.');
+      }
+
       refresh();
     } catch (e) {
-      Alert.alert('Error', e.message || 'No pudimos confirmar tu presencia.');
+      if (typeof window !== 'undefined') {
+        window.alert(`Error: ${e.message || 'No pudimos confirmar tu presencia.'}`);
+      } else {
+        Alert.alert('Error', e.message || 'No pudimos confirmar tu presencia.');
+      }
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleCancel = async () => {
-    Alert.alert(
-      'Cancelar clase',
-      '¿Estás seguro de que querés cancelar tu inscripción?',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Sí, cancelar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setActionLoading(true);
-              await ClassesService.cancel(classId);
-              Alert.alert('Cancelado', 'Tu inscripción fue cancelada.');
-              refresh();
-            } catch (e) {
-              Alert.alert('Error', e.message || 'No pudimos cancelar tu inscripción.');
-            } finally {
-              setActionLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  if (loading) return <View style={styles.center}><ActivityIndicator color={colors.primary}/></View>;
+  if (loading) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
   if (error) return (
     <View style={styles.center}>
       <Text style={styles.error}>{error}</Text>
@@ -83,45 +66,31 @@ export default function ClassDetailScreen({ route }) {
   const gymAddress = data?.gym_address;
   const capacity = data?.class_max_participants;
 
-  // Determinar si mostrar botones según el estado
   const participantStatus = data?.participant_status;
   const canConfirm = canConfirmFromParticipantStatus(participantStatus);
-  const canCancel = canCancelFromParticipantStatus(participantStatus);
   const displayStatus = toSpanishClassStatus(status);
   const displayParticipant = toSpanishParticipantStatus(participantStatus);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{title}</Text>
-      <Line label="Profesor" value={professor}/>
-      <Line label="Programada" value={scheduled}/>
-      <Line label="Finalizó" value={ended}/>
-  {/* Mostrar primero el estado del participante si existe */}
-  <Line label="Estado" value={displayParticipant || displayStatus}/>
-      <Line label="Gimnasio" value={gym}/>
-      <Line label="Dirección" value={gymAddress}/>
-      <Line label="Cupo Máximo" value={capacity}/>
+      <Line label="Profesor" value={professor} />
+      <Line label="Programada" value={scheduled} />
+      <Line label="Finalizó" value={ended} />
+      <Line label="Estado" value={displayParticipant || displayStatus} />
+      <Line label="Gimnasio" value={gym} />
+      <Line label="Dirección" value={gymAddress} />
+      <Line label="Cupo Máximo" value={capacity} />
 
-      {(canConfirm || canCancel) && (
+      {canConfirm && (
         <View style={styles.actions}>
-          {canConfirm && (
-            <TouchableOpacity
-              style={[styles.button, styles.buttonConfirm]}
-              onPress={handleConfirm}
-              disabled={actionLoading}
-            >
-              <Text style={styles.buttonText}>Confirmar Presencia</Text>
-            </TouchableOpacity>
-          )}
-          {canCancel && (
-            <TouchableOpacity
-              style={[styles.button, styles.buttonCancel]}
-              onPress={handleCancel}
-              disabled={actionLoading}
-            >
-              <Text style={styles.buttonText}>Cancelar Inscripción</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.button, styles.buttonConfirm]}
+            onPress={handleConfirm}
+            disabled={actionLoading}
+          >
+            <Text style={styles.buttonText}>Confirmar Presencia</Text>
+          </TouchableOpacity>
         </View>
       )}
     </ScrollView>

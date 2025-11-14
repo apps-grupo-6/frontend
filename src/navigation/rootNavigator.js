@@ -1,5 +1,7 @@
+import { View, ActivityIndicator } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "@/context/authContext";
+import colors from "@/theme/colors";
 
 import LoginScreen from "@/domain/auth/screens/loginScreen";
 import RecoverScreen from "@/domain/auth/screens/recoverScreen";
@@ -32,7 +34,15 @@ function AppStack() {
 }
 
 export default function RootNavigator() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
   
   return isAuthenticated ? <AppStack /> : <AuthStack />;
 }

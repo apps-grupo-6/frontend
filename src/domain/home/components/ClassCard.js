@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import colors from "@/theme/colors";
 import { getMockedImages } from "@/utils/getMockedImages";
 
-export default function ClassCard({ classData, onReserve, imageIndex = 0 }) {
+export default function ClassCard({ classData, onReserve, imageIndex = 0, isReserved = false }) {
     const { class_discipline_name, class_status, professor_first_name, class_scheduled_at, gym_name } = classData;
 
     const imageUrl = getMockedImages()[imageIndex % getMockedImages().length].url;
@@ -54,8 +54,21 @@ export default function ClassCard({ classData, onReserve, imageIndex = 0 }) {
                 {renderInfoRow("Fecha", formatDate(class_scheduled_at))}
                 {renderInfoRow("Sede", gym_name || "No especificada")}
 
-                <TouchableOpacity style={styles.reserveButton} onPress={() => onReserve?.(classData)} activeOpacity={0.8}>
-                    <Text style={styles.reserveButtonText}>Reservar</Text>
+                <TouchableOpacity 
+                    style={[
+                        styles.reserveButton, 
+                        isReserved && styles.reservedButton
+                    ]} 
+                    onPress={() => !isReserved && onReserve?.(classData)} 
+                    activeOpacity={isReserved ? 1 : 0.8}
+                    disabled={isReserved}
+                >
+                    <Text style={[
+                        styles.reserveButtonText,
+                        isReserved && styles.reservedButtonText
+                    ]}>
+                        {isReserved ? "✓ Reservado" : "Reservar"}
+                    </Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -76,5 +89,6 @@ const styles = StyleSheet.create({
     infoValue: { fontSize: 16, color: colors.text, fontWeight: "500" },
     reserveButton: { backgroundColor: colors.primary, paddingVertical: 14, paddingHorizontal: 24, borderRadius: 10, marginTop: 20, alignItems: "center", elevation: 5 },
     reserveButtonText: { color: colors.surface, fontSize: 16, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
+    reservedButton: { backgroundColor: "#4caf50", opacity: 0.8 },
+    reservedButtonText: { color: "#FFFFFF" },
 });
-

@@ -1,12 +1,14 @@
-import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import colors from "@/theme/colors";
 import Navbar from "@/components/ui/Navbar";
 import Dropdown from "@/components/ui/Dropdown";
 import ClassCard from "@/domain/home/components/ClassCard";
 import useClasses from "@/domain/home/hooks/useClasses";
 import useLocations from "@/domain/home/hooks/useLocations";
+import useReserveClass from "@/domain/home/hooks/useReserveClass";
+import useUpcomingClasses from "@/domain/classes/hooks/useUpcomingClasses";
 
 const TIME_RANGES = ['Todos los horarios', 'Mañana (6:00 - 12:00)', 'Mediodía (12:00 - 16:00)', 'Tarde (16:00 - 20:00)', 'Noche (20:00 - 24:00)'];
 const ALL_GYMS = 'Todos los gimnasios';
@@ -18,8 +20,47 @@ export default function HomeScreen() {
 
   const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder } = useClasses(selectedGym, selectedTimeRange);
   const { gymNames, error: locationsError } = useLocations();
+  const { reserveClass, loading: reserving } = useReserveClass();
+  const { data: upcomingClasses, refresh: refreshUpcoming } = useUpcomingClasses();
 
-  const handleReserve = (classData) => alert(`Reserva de clase: ${classData.class_discipline_name}`);
+  const reservedClassIds = useMemo(() => {
+    if (!upcomingClasses || !Array.isArray(upcomingClasses)) return new Set();
+    return new Set(upcomingClasses.map(cls => cls.class_id || cls.id));
+  }, [upcomingClasses]);
+
+  const isClassReserved = (classId) => reservedClassIds.has(classId);
+
+  const handleReserve = async (classData) => {
+    const classId = classData.class_id;
+
+    if (!classId) {
+      Alert.alert(
+        "Error",
+        "No se pudo identificar la clase. Por favor, intenta de nuevo.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    const result = await reserveClass(classId);
+
+    if (result.success) {
+      refreshUpcoming();
+
+      Alert.alert(
+        "¡Reserva exitosa!",
+        `Te has inscrito en la clase de ${classData.class_discipline_name}`,
+        [{ text: "OK" }]
+      );
+    } else {
+      Alert.alert(
+        "Error al reservar",
+        result.error || "No se pudo realizar la reserva",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   const handleGymSelect = (gymName) => setSelectedGym(gymName === ALL_GYMS ? null : gymName);
   const handleTimeRangeSelect = (timeRange) => setSelectedTimeRange(timeRange === ALL_TIMES ? null : timeRange);
 
@@ -36,7 +77,6 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <Navbar />
       <View style={styles.container}>
-        {/* Header con título y botón de ordenamiento */}
         <View style={styles.header}>
           <Text style={styles.title}>Nuestras Clases</Text>
           <TouchableOpacity
@@ -98,9 +138,14 @@ export default function HomeScreen() {
           <>
             <FlatList
               data={classes}
-              keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+              keyExtractor={(item, index) => item.class_id?.toString() || index.toString()}
               renderItem={({ item, index }) => (
-                <ClassCard classData={item} onReserve={handleReserve} imageIndex={index} />
+                <ClassCard
+                  classData={item}
+                  onReserve={handleReserve}
+                  imageIndex={index}
+                  isReserved={isClassReserved(item.class_id)}
+                />
               )}
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
@@ -149,7 +194,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.dark },
   container: { flex: 1, backgroundColor: colors.bg, padding: 20 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20},
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   title: { fontSize: 28, fontWeight: "700", color: colors.text, flex: 1 },
   sortButton: { backgroundColor: colors.primary, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, elevation: 3 },
   sortButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "600" },

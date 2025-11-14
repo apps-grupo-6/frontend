@@ -7,7 +7,7 @@ import useUserInfo from "@/domain/users/hooks/useUserInfo";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
-  const { data: me, loading, updateUser } = useUserInfo();
+  const { data: me, loading, update } = useUserInfo();
 
   const [firstName, setFirstName] = useState(me?.first_name || "");
   const [lastName, setLastName] = useState(me?.last_name || "");
@@ -18,17 +18,31 @@ export default function EditProfileScreen() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateUser({
+      const result = await update({
         first_name: firstName,
         last_name: lastName,
         contact_email: email,
         telephone: telephone,
       });
-      Alert.alert("Éxito", "Tus datos fueron actualizados.", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      
+      if (result.ok) {
+        if (typeof window !== 'undefined') {
+          window.alert("Tus datos fueron actualizados.");
+          navigation.goBack();
+        } else {
+          Alert.alert("Éxito", "Tus datos fueron actualizados.", [
+            { text: "OK", onPress: () => navigation.goBack() },
+          ]);
+        }
+      } else {
+        throw new Error(result.message || "No pudimos actualizar tus datos.");
+      }
     } catch (e) {
-      Alert.alert("Error", e.message || "No pudimos actualizar tus datos.");
+      if (typeof window !== 'undefined') {
+        window.alert(`Error: ${e.message || "No pudimos actualizar tus datos."}`);
+      } else {
+        Alert.alert("Error", e.message || "No pudimos actualizar tus datos.");
+      }
     } finally {
       setSaving(false);
     }

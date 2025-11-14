@@ -6,5 +6,9 @@ const getClasses = async () => {
     return response;
 };
 
-export { getClasses };
+const reserveClass = async (classId) => {
+    const response = await api.post(`${BASE_URL_CLASSES}/${classId}/participant`);
+    return response;
+};
 
+export { getClasses, reserveClass };

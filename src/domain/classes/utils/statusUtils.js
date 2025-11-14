@@ -1,5 +1,3 @@
-// Utilidades para normalizar y traducir estados al español
-
 function norm(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -73,7 +71,7 @@ export function toSpanishParticipantStatus(status) {
 
 export function canConfirmFromParticipantStatus(status) {
   const s = norm(status);
-  return ["pending", "pendiente", "enrolled", "inscripto", "registered"].includes(s);
+  return ["pending", "pendiente", "enrolled", "inscripto", "registered", "not confirmed", "not_confirmed", "unconfirmed", "not confimet"].includes(s);
 }
 
 export function canCancelFromParticipantStatus(status) {

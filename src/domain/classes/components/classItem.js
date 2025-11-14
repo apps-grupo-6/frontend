@@ -40,32 +40,61 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
 
-  // Título: disciplina > "Clase con {profesor}" > "Clase"
   const title =
     (discipline && discipline.trim()) ||
     (professorFull ? `Clase con ${professorFull}` : "Clase");
 
-  const content = (
+  return (
     <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
-      {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
-      {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
-      {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          android_ripple={{ color: colors.surfaceAlt }}
+        >
+          <View>
+            <Text style={styles.title}>{title}</Text>
+            {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
+            {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
+            {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
+          </View>
+        </Pressable>
+      ) : (
+        <View>
+          <Text style={styles.title}>{title}</Text>
+          {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
+          {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
+          {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
+        </View>
+      )}
 
       {showActions && (canConfirm || canCancel) && (
         <View style={styles.actions}>
           {canConfirm && (
             <PrimaryButton
-              title="Confirmar presencia"
+              title="Confirmar asistencia"
+              variant="success"
               loading={loadingConfirm}
               onPress={async () => {
                 try {
+
                   setLoadingConfirm(true);
-                  await ClassesService.confirm(classId);
-                  Alert.alert("Éxito", "Tu presencia fue confirmada.");
+                  const result = await ClassesService.confirm(classId);
+
+                  if (typeof window !== 'undefined') {
+                    window.alert("Tu presencia fue confirmada.");
+                  } else {
+                    Alert.alert("Éxito", "Tu presencia fue confirmada.");
+                  }
+
                   onActionDone && onActionDone();
                 } catch (e) {
-                  Alert.alert("Error", e.message || "No pudimos confirmar tu presencia.");
+                  console.error("Error al confirmar:", e);
+
+                  if (typeof window !== 'undefined') {
+                    window.alert(`Error: ${e.message || "No pudimos confirmar tu presencia."}`);
+                  } else {
+                    Alert.alert("Error", e.message || "No pudimos confirmar tu presencia.");
+                  }
                 } finally {
                   setLoadingConfirm(false);
                 }
@@ -77,30 +106,36 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
               title="Cancelar"
               variant="secondary"
               loading={loadingCancel}
-              onPress={() => {
-                Alert.alert(
-                  "Cancelar clase",
-                  "¿Estás seguro de que querés cancelar tu inscripción?",
-                  [
-                    { text: "No", style: "cancel" },
-                    {
-                      text: "Sí, cancelar",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          setLoadingCancel(true);
-                          await ClassesService.cancel(classId);
-                          Alert.alert("Cancelado", "Tu inscripción fue cancelada.");
-                          onActionDone && onActionDone();
-                        } catch (e) {
-                          Alert.alert("Error", e.message || "No pudimos cancelar tu inscripción.");
-                        } finally {
-                          setLoadingCancel(false);
-                        }
-                      },
-                    },
-                  ]
-                );
+              onPress={async () => {
+                const confirmed = typeof window !== 'undefined'
+                  ? window.confirm("¿Estás seguro de que querés cancelar tu inscripción?")
+                  : true;
+
+                if (!confirmed) {
+                  return;
+                }
+
+                try {
+                  setLoadingCancel(true);
+                  const result = await ClassesService.cancel(classId);
+
+                  if (typeof window !== 'undefined') {
+                    window.alert("Tu inscripción fue cancelada.");
+                  } else {
+                    Alert.alert("Cancelado", "Tu inscripción fue cancelada.");
+                  }
+
+                  onActionDone && onActionDone();
+                } catch (e) {
+                  console.error("Error al cancelar:", e);
+                  if (typeof window !== 'undefined') {
+                    window.alert(`Error: ${e.message || "No pudimos cancelar tu inscripción."}`);
+                  } else {
+                    Alert.alert("Error", e.message || "No pudimos cancelar tu inscripción.");
+                  }
+                } finally {
+                  setLoadingCancel(false);
+                }
               }}
             />
           )}
@@ -108,16 +143,6 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
       )}
     </View>
   );
-
-  if (onPress) {
-    return (
-      <Pressable onPress={onPress} android_ripple={{ color: colors.surfaceAlt }}>
-        {content}
-      </Pressable>
-    );
-  }
-
-  return content;
 }
 
 const styles = StyleSheet.create({
@@ -147,5 +172,7 @@ const styles = StyleSheet.create({
   actions: {
     marginTop: 12,
     gap: 8,
+    zIndex: 100,
+    position: 'relative',
   },
 });
