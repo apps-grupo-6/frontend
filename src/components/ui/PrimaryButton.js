@@ -14,11 +14,6 @@ export default function PrimaryButton({
   const isDisabled = disabled || loading;
 
   const handlePress = () => {
-    console.log("=== PrimaryButton pressed ===");
-    console.log("Title:", title);
-    console.log("Disabled:", isDisabled);
-    console.log("onPress exists:", !!onPress);
-    
     if (onPress && !isDisabled) {
       console.log("Executing onPress...");
       onPress();
