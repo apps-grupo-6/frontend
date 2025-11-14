@@ -3,7 +3,8 @@ import { View, Text, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity
 import useClassDetail from '@/domain/classes/hooks/useClassDetail';
 import { ClassesService } from '@/domain/classes/services/classesService';
 import colors from '@/theme/colors';
-import { toSpanishClassStatus, toSpanishParticipantStatus, canConfirmFromParticipantStatus } from '@/domain/classes/utils/statusUtils';
+import { toSpanishClassStatus, toSpanishParticipantStatus, canCancelFromParticipantStatus, canConfirmFromParticipantStatus } from '@/domain/classes/utils/statusUtils';
+import { useNotification } from "@/context/notificationContext";
 
 function Line({ label, value }) {
   if (!value) return null;
@@ -26,30 +27,48 @@ export default function ClassDetailScreen({ route }) {
   const { classId } = route.params || {};
   const { data, loading, error, refresh } = useClassDetail(classId);
   const [actionLoading, setActionLoading] = useState(false);
+  const { notifySuccess, notifyError } = useNotification();
 
   const handleConfirm = async () => {
     try {
       setActionLoading(true);
       await ClassesService.confirm(classId);
-      if (typeof window !== 'undefined') {
-        window.alert('Tu presencia fue confirmada.');
-      } else {
-        Alert.alert('Éxito', 'Tu presencia fue confirmada.');
-      }
-
+      notifySuccess('Éxito', 'Tu presencia fue confirmada.');
       refresh();
     } catch (e) {
-      if (typeof window !== 'undefined') {
-        window.alert(`Error: ${e.message || 'No pudimos confirmar tu presencia.'}`);
-      } else {
-        Alert.alert('Error', e.message || 'No pudimos confirmar tu presencia.');
-      }
+      notifyError('Error', e.message || 'No pudimos confirmar tu presencia.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
+  const handleCancel = async () => {
+    Alert.alert(
+      'Cancelar clase',
+      '¿Estás seguro de que querés cancelar tu inscripción?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Sí, cancelar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+              await ClassesService.cancel(classId);
+              notifySuccess("Éxito", "Tu inscripción fue cancelada correctamente.");
+              refresh();
+            } catch (e) {
+              notifyError('Error', e.message || 'No pudimos cancelar tu inscripción.');
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading) return <View style={styles.center}><ActivityIndicator color={colors.primary}/></View>;
   if (error) return (
     <View style={styles.center}>
       <Text style={styles.error}>{error}</Text>

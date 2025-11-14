@@ -4,6 +4,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import { ClassesService } from "@/domain/classes/services/classesService";
 import { toSpanishClassStatus, toSpanishParticipantStatus, canCancelFromParticipantStatus, canConfirmFromParticipantStatus } from "@/domain/classes/utils/statusUtils";
 import React, { useState } from "react";
+import { useNotification } from "@/context/notificationContext";
 
 function toDateSafe(value) {
   if (!value) return null;
@@ -40,6 +41,9 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
 
+  const { notifySuccess, notifyError } = useNotification();
+  
+  // Título: disciplina > "Clase con {profesor}" > "Clase"
   const title =
     (discipline && discipline.trim()) ||
     (professorFull ? `Clase con ${professorFull}` : "Clase");
@@ -76,25 +80,13 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
               loading={loadingConfirm}
               onPress={async () => {
                 try {
-
                   setLoadingConfirm(true);
                   const result = await ClassesService.confirm(classId);
-
-                  if (typeof window !== 'undefined') {
-                    window.alert("Tu presencia fue confirmada.");
-                  } else {
-                    Alert.alert("Éxito", "Tu presencia fue confirmada.");
-                  }
-
+                  notifySuccess("Éxito", "Tu presencia fue confirmada.");
                   onActionDone && onActionDone();
                 } catch (e) {
                   console.error("Error al confirmar:", e);
-
-                  if (typeof window !== 'undefined') {
-                    window.alert(`Error: ${e.message || "No pudimos confirmar tu presencia."}`);
-                  } else {
-                    Alert.alert("Error", e.message || "No pudimos confirmar tu presencia.");
-                  }
+                  notifyError("Error", e.message || "No pudimos confirmar tu presencia.");
                 } finally {
                   setLoadingConfirm(false);
                 }
@@ -118,21 +110,11 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
                 try {
                   setLoadingCancel(true);
                   const result = await ClassesService.cancel(classId);
-
-                  if (typeof window !== 'undefined') {
-                    window.alert("Tu inscripción fue cancelada.");
-                  } else {
-                    Alert.alert("Cancelado", "Tu inscripción fue cancelada.");
-                  }
-
+                  notifySuccess("Éxito", "Tu inscripción fue cancelada.");
                   onActionDone && onActionDone();
                 } catch (e) {
                   console.error("Error al cancelar:", e);
-                  if (typeof window !== 'undefined') {
-                    window.alert(`Error: ${e.message || "No pudimos cancelar tu inscripción."}`);
-                  } else {
-                    Alert.alert("Error", e.message || "No pudimos cancelar tu inscripción.");
-                  }
+                  notifyError(`Error: ${e.message || "No pudimos cancelar tu inscripción."}`);
                 } finally {
                   setLoadingCancel(false);
                 }

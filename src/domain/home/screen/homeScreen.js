@@ -9,6 +9,7 @@ import useClasses from "@/domain/home/hooks/useClasses";
 import useLocations from "@/domain/home/hooks/useLocations";
 import useReserveClass from "@/domain/home/hooks/useReserveClass";
 import useUpcomingClasses from "@/domain/classes/hooks/useUpcomingClasses";
+import { useNotification } from "@/context/notificationContext";
 
 const TIME_RANGES = ['Todos los horarios', 'Mañana (6:00 - 12:00)', 'Mediodía (12:00 - 16:00)', 'Tarde (16:00 - 20:00)', 'Noche (20:00 - 24:00)'];
 const ALL_GYMS = 'Todos los gimnasios';
@@ -22,7 +23,8 @@ export default function HomeScreen() {
   const { gymNames, error: locationsError } = useLocations();
   const { reserveClass, loading: reserving } = useReserveClass();
   const { data: upcomingClasses, refresh: refreshUpcoming } = useUpcomingClasses();
-
+  const { notifySuccess, notifyError } = useNotification();
+  
   const reservedClassIds = useMemo(() => {
     if (!upcomingClasses || !Array.isArray(upcomingClasses)) return new Set();
     return new Set(upcomingClasses.map(cls => cls.class_id || cls.id));
@@ -34,10 +36,9 @@ export default function HomeScreen() {
     const classId = classData.class_id;
 
     if (!classId) {
-      Alert.alert(
+      notifyError(
         "Error",
-        "No se pudo identificar la clase. Por favor, intenta de nuevo.",
-        [{ text: "OK" }]
+        "No se pudo identificar la clase. Por favor, intenta de nuevo."
       );
       return;
     }
@@ -47,20 +48,20 @@ export default function HomeScreen() {
     if (result.success) {
       refreshUpcoming();
 
-      Alert.alert(
+      notifySuccess(
         "¡Reserva exitosa!",
-        `Te has inscrito en la clase de ${classData.class_discipline_name}`,
-        [{ text: "OK" }]
+        `Te has inscrito en la clase de ${classData.class_discipline_name}`
       );
     } else {
-      Alert.alert(
+      notifyError(
         "Error al reservar",
-        result.error || "No se pudo realizar la reserva",
-        [{ text: "OK" }]
+        result.error || "No se pudo realizar la reserva"
       );
     }
   };
 
+
+  const handleReserve = (classData) => notifySuccess("Éxito", `Reservaste la clase: ${classData.class_discipline_name}. Recorda que tenes que confirmar tu presencia.`);
   const handleGymSelect = (gymName) => setSelectedGym(gymName === ALL_GYMS ? null : gymName);
   const handleTimeRangeSelect = (timeRange) => setSelectedTimeRange(timeRange === ALL_TIMES ? null : timeRange);
 

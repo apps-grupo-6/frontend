@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import colors from "@/theme/colors";
 import TextField from "@/components/ui/TextField";
 import useUserInfo from "@/domain/users/hooks/useUserInfo";
+import { useNotification } from "@/context/notificationContext";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -14,6 +15,7 @@ export default function EditProfileScreen() {
   const [email, setEmail] = useState(me?.contact_email || me?.email || "");
   const [telephone, setTelephone] = useState(me?.telephone || "");
   const [saving, setSaving] = useState(false);
+  const { notifySuccess, notifyError } = useNotification();
 
   const handleSave = async () => {
     try {
@@ -26,23 +28,13 @@ export default function EditProfileScreen() {
       });
       
       if (result.ok) {
-        if (typeof window !== 'undefined') {
-          window.alert("Tus datos fueron actualizados.");
-          navigation.goBack();
-        } else {
-          Alert.alert("Éxito", "Tus datos fueron actualizados.", [
-            { text: "OK", onPress: () => navigation.goBack() },
-          ]);
-        }
+        notifySuccess("Éxito", "Tus datos fueron actualizados correctamente.");
+        navigation.goBack();
       } else {
         throw new Error(result.message || "No pudimos actualizar tus datos.");
       }
     } catch (e) {
-      if (typeof window !== 'undefined') {
-        window.alert(`Error: ${e.message || "No pudimos actualizar tus datos."}`);
-      } else {
-        Alert.alert("Error", e.message || "No pudimos actualizar tus datos.");
-      }
+      notifyError("Error", e.message || "No pudimos actualizar tus datos.");
     } finally {
       setSaving(false);
     }
