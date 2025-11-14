@@ -85,45 +85,31 @@ export default function ClassDetailScreen({ route }) {
   const gymAddress = data?.gym_address;
   const capacity = data?.class_max_participants;
 
-  // Determinar si mostrar botones según el estado
   const participantStatus = data?.participant_status;
   const canConfirm = canConfirmFromParticipantStatus(participantStatus);
-  const canCancel = canCancelFromParticipantStatus(participantStatus);
   const displayStatus = toSpanishClassStatus(status);
   const displayParticipant = toSpanishParticipantStatus(participantStatus);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{title}</Text>
-      <Line label="Profesor" value={professor}/>
-      <Line label="Programada" value={scheduled}/>
-      <Line label="Finalizó" value={ended}/>
-  {/* Mostrar primero el estado del participante si existe */}
-  <Line label="Estado" value={displayParticipant || displayStatus}/>
-      <Line label="Gimnasio" value={gym}/>
-      <Line label="Dirección" value={gymAddress}/>
-      <Line label="Cupo Máximo" value={capacity}/>
+      <Line label="Profesor" value={professor} />
+      <Line label="Programada" value={scheduled} />
+      <Line label="Finalizó" value={ended} />
+      <Line label="Estado" value={displayParticipant || displayStatus} />
+      <Line label="Gimnasio" value={gym} />
+      <Line label="Dirección" value={gymAddress} />
+      <Line label="Cupo Máximo" value={capacity} />
 
-      {(canConfirm || canCancel) && (
+      {canConfirm && (
         <View style={styles.actions}>
-          {canConfirm && (
-            <TouchableOpacity
-              style={[styles.button, styles.buttonConfirm]}
-              onPress={handleConfirm}
-              disabled={actionLoading}
-            >
-              <Text style={styles.buttonText}>Confirmar Presencia</Text>
-            </TouchableOpacity>
-          )}
-          {canCancel && (
-            <TouchableOpacity
-              style={[styles.button, styles.buttonCancel]}
-              onPress={handleCancel}
-              disabled={actionLoading}
-            >
-              <Text style={styles.buttonText}>Cancelar Inscripción</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.button, styles.buttonConfirm]}
+            onPress={handleConfirm}
+            disabled={actionLoading}
+          >
+            <Text style={styles.buttonText}>Confirmar Presencia</Text>
+          </TouchableOpacity>
         </View>
       )}
     </ScrollView>

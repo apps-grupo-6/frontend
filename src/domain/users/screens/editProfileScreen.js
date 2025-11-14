@@ -8,7 +8,7 @@ import { useNotification } from "@/context/notificationContext";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
-  const { data: me, loading, updateUser } = useUserInfo();
+  const { data: me, loading, update } = useUserInfo();
 
   const [firstName, setFirstName] = useState(me?.first_name || "");
   const [lastName, setLastName] = useState(me?.last_name || "");
@@ -20,15 +20,19 @@ export default function EditProfileScreen() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateUser({
+      const result = await update({
         first_name: firstName,
         last_name: lastName,
         contact_email: email,
         telephone: telephone,
       });
-      notifySuccess("Éxito", "Tus datos fueron actualizados.", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      
+      if (result.ok) {
+        notifySuccess("Éxito", "Tus datos fueron actualizados correctamente.");
+        navigation.goBack();
+      } else {
+        throw new Error(result.message || "No pudimos actualizar tus datos.");
+      }
     } catch (e) {
       notifyError("Error", e.message || "No pudimos actualizar tus datos.");
     } finally {

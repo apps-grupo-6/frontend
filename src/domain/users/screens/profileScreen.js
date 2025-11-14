@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, ScrollView } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import colors from "@/theme/colors";
+import Navbar from "@/components/ui/Navbar";
 import useUserInfo from "@/domain/users/hooks/useUserInfo";
 import useUpcomingClasses from "@/domain/classes/hooks/useUpcomingClasses";
 import useClassesHistory from "@/domain/classes/hooks/useClassesHistory";
@@ -59,24 +61,32 @@ export default function ProfileScreen() {
   const [tab, setTab] = useState("data");
   const navigation = useNavigation();
 
-  const { data: me, loading: loadingMe, error: errorMe } = useUserInfo();
+  const { data: me, loading: loadingMe, error: errorMe, refresh: refetchMe } = useUserInfo();
   const { data: upcoming, loading: loadingUpcoming, error: errorUpcoming, refresh: refetchUpcoming } =
     useUpcomingClasses();
   const { data: history, loading: loadingHistory, error: errorHistory, refresh: refetchHistory } =
     useClassesHistory();
 
+  useFocusEffect(
+    useCallback(() => {
+      refetchMe();
+    }, [refetchMe])
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Mi Perfil</Text>
-      <Segmented
-        value={tab}
-        onChange={setTab}
-        options={[
-          { label: "Datos", value: "data" },
-          { label: "Próximas", value: "upcoming" },
-          { label: "Historial", value: "history" },
-        ]}
-      />
+    <SafeAreaView style={styles.safeArea}>
+      <Navbar />
+      <View style={styles.container}>
+        <Text style={styles.header}>Mi Perfil</Text>
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          options={[
+            { label: "Datos", value: "data" },
+            { label: "Próximas", value: "upcoming" },
+            { label: "Historial", value: "history" },
+          ]}
+        />
 
       {tab === "data" && (
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
@@ -142,16 +152,17 @@ export default function ProfileScreen() {
           )}
         </View>
       )}
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  safeArea: { flex: 1, backgroundColor: colors.dark },
+  container: { flex: 1, backgroundColor: colors.bg, paddingTop: 20 },
   header: {
     fontSize: 22,
     fontWeight: "800",
-    marginTop: 48,
     marginBottom: 12,
     paddingHorizontal: 16,
     color: colors.text,

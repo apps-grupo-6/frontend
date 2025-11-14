@@ -7,21 +7,31 @@ export default function PrimaryButton({
   onPress,
   loading = false,
   disabled = false,
-  variant = "primary",   // "primary" | "secondary" | "ghost"
+  variant = "primary",   // "primary" | "secondary" | "ghost" | "success"
   style,
   textStyle,
 }) {
   const isDisabled = disabled || loading;
 
+  const handlePress = () => {
+    if (onPress && !isDisabled) {
+      console.log("Executing onPress...");
+      onPress();
+    } else {
+      console.log("onPress NOT executed. Disabled:", isDisabled, "onPress:", !!onPress);
+    }
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.base,
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
         variant === "ghost" && styles.ghost,
+        variant === "success" && styles.success,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         style,
@@ -47,10 +57,12 @@ export default function PrimaryButton({
 
 const styles = StyleSheet.create({
   base: {
-    paddingVertical: 14,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 10,
+    elevation: 5,
   },
   primary: {
     backgroundColor: colors.primary,
@@ -64,6 +76,10 @@ const styles = StyleSheet.create({
   ghost: {
     backgroundColor: "transparent",
   },
+  success: {
+    backgroundColor: "#4caf50",
+    marginTop: 5
+  },
   pressed: {
     opacity: 0.85,
   },
@@ -72,13 +88,10 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "600",
   },
   textSecondary: {
     color: colors.primary,
-  },
-  textDisabled: {
-    // mantiene contraste aceptable
   },
 });

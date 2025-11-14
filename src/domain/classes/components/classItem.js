@@ -48,26 +48,44 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
     (discipline && discipline.trim()) ||
     (professorFull ? `Clase con ${professorFull}` : "Clase");
 
-  const content = (
+  return (
     <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
-      {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
-      {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
-      {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
+      {onPress ? (
+        <Pressable
+          onPress={onPress}
+          android_ripple={{ color: colors.surfaceAlt }}
+        >
+          <View>
+            <Text style={styles.title}>{title}</Text>
+            {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
+            {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
+            {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
+          </View>
+        </Pressable>
+      ) : (
+        <View>
+          <Text style={styles.title}>{title}</Text>
+          {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
+          {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
+          {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
+        </View>
+      )}
 
       {showActions && (canConfirm || canCancel) && (
         <View style={styles.actions}>
           {canConfirm && (
             <PrimaryButton
-              title="Confirmar presencia"
+              title="Confirmar asistencia"
+              variant="success"
               loading={loadingConfirm}
               onPress={async () => {
                 try {
                   setLoadingConfirm(true);
-                  await ClassesService.confirm(classId);
+                  const result = await ClassesService.confirm(classId);
                   notifySuccess("Éxito", "Tu presencia fue confirmada.");
                   onActionDone && onActionDone();
                 } catch (e) {
+                  console.error("Error al confirmar:", e);
                   notifyError("Error", e.message || "No pudimos confirmar tu presencia.");
                 } finally {
                   setLoadingConfirm(false);
@@ -80,30 +98,26 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
               title="Cancelar"
               variant="secondary"
               loading={loadingCancel}
-              onPress={() => {
-                Alert.alert(
-                  "Cancelar clase",
-                  "¿Estás seguro de que querés cancelar tu inscripción?",
-                  [
-                    { text: "No", style: "cancel" },
-                    {
-                      text: "Sí, cancelar",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          setLoadingCancel(true);
-                          await ClassesService.cancel(classId);
-                          notifySuccess("Éxito", "Tu inscripción fue cancelada correctamente.");
-                          onActionDone && onActionDone();
-                        } catch (e) {
-                          notifyError("Error", e.message || "No pudimos cancelar tu inscripción.");
-                        } finally {
-                          setLoadingCancel(false);
-                        }
-                      },
-                    },
-                  ]
-                );
+              onPress={async () => {
+                const confirmed = typeof window !== 'undefined'
+                  ? window.confirm("¿Estás seguro de que querés cancelar tu inscripción?")
+                  : true;
+
+                if (!confirmed) {
+                  return;
+                }
+
+                try {
+                  setLoadingCancel(true);
+                  const result = await ClassesService.cancel(classId);
+                  notifySuccess("Éxito", "Tu inscripción fue cancelada.");
+                  onActionDone && onActionDone();
+                } catch (e) {
+                  console.error("Error al cancelar:", e);
+                  notifyError(`Error: ${e.message || "No pudimos cancelar tu inscripción."}`);
+                } finally {
+                  setLoadingCancel(false);
+                }
               }}
             />
           )}
@@ -111,16 +125,6 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
       )}
     </View>
   );
-
-  if (onPress) {
-    return (
-      <Pressable onPress={onPress} android_ripple={{ color: colors.surfaceAlt }}>
-        {content}
-      </Pressable>
-    );
-  }
-
-  return content;
 }
 
 const styles = StyleSheet.create({
@@ -150,5 +154,7 @@ const styles = StyleSheet.create({
   actions: {
     marginTop: 12,
     gap: 8,
+    zIndex: 100,
+    position: 'relative',
   },
 });
