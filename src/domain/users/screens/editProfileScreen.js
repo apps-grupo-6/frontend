@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import colors from "@/theme/colors";
 import TextField from "@/components/ui/TextField";
 import useUserInfo from "@/domain/users/hooks/useUserInfo";
+import { useNotification } from "@/context/notificationContext";
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -14,6 +15,7 @@ export default function EditProfileScreen() {
   const [email, setEmail] = useState(me?.contact_email || me?.email || "");
   const [telephone, setTelephone] = useState(me?.telephone || "");
   const [saving, setSaving] = useState(false);
+  const { notifySuccess, notifyError } = useNotification();
 
   const handleSave = async () => {
     try {
@@ -24,11 +26,11 @@ export default function EditProfileScreen() {
         contact_email: email,
         telephone: telephone,
       });
-      Alert.alert("Éxito", "Tus datos fueron actualizados.", [
+      notifySuccess("Éxito", "Tus datos fueron actualizados.", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch (e) {
-      Alert.alert("Error", e.message || "No pudimos actualizar tus datos.");
+      notifyError("Error", e.message || "No pudimos actualizar tus datos.");
     } finally {
       setSaving(false);
     }

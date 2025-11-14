@@ -4,6 +4,7 @@ import useClassDetail from '@/domain/classes/hooks/useClassDetail';
 import { ClassesService } from '@/domain/classes/services/classesService';
 import colors from '@/theme/colors';
 import { toSpanishClassStatus, toSpanishParticipantStatus, canCancelFromParticipantStatus, canConfirmFromParticipantStatus } from '@/domain/classes/utils/statusUtils';
+import { useNotification } from "@/context/notificationContext";
 
 function Line({ label, value }) {
   if (!value) return null;
@@ -26,15 +27,16 @@ export default function ClassDetailScreen({ route }) {
   const { classId } = route.params || {};
   const { data, loading, error, refresh } = useClassDetail(classId);
   const [actionLoading, setActionLoading] = useState(false);
+  const { notifySuccess, notifyError } = useNotification();
 
   const handleConfirm = async () => {
     try {
       setActionLoading(true);
       await ClassesService.confirm(classId);
-      Alert.alert('Éxito', 'Tu presencia fue confirmada.');
+      notifySuccess('Éxito', 'Tu presencia fue confirmada.');
       refresh();
     } catch (e) {
-      Alert.alert('Error', e.message || 'No pudimos confirmar tu presencia.');
+      notifyError('Error', e.message || 'No pudimos confirmar tu presencia.');
     } finally {
       setActionLoading(false);
     }
@@ -53,10 +55,10 @@ export default function ClassDetailScreen({ route }) {
             try {
               setActionLoading(true);
               await ClassesService.cancel(classId);
-              Alert.alert('Cancelado', 'Tu inscripción fue cancelada.');
+              notifySuccess("Éxito", "Tu inscripción fue cancelada correctamente.");
               refresh();
             } catch (e) {
-              Alert.alert('Error', e.message || 'No pudimos cancelar tu inscripción.');
+              notifyError('Error', e.message || 'No pudimos cancelar tu inscripción.');
             } finally {
               setActionLoading(false);
             }

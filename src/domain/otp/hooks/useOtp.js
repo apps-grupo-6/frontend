@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { AuthService } from "@/domain/auth/services/authService";
 import { OtpService } from "@/domain/otp/services/otpService";
 import { useAuth } from "@/context/authContext";
+import { useNotification } from "@/context/notificationContext";
 
 export default function useOtp({ username = null, new_password = null, onSuccess = null } = {}) {
     const { login } = useAuth();
@@ -11,6 +12,7 @@ export default function useOtp({ username = null, new_password = null, onSuccess
     const [otpErrorMsg, setOtpErrorMsg] = useState("");
     const [loadingOtp, setLoadingOtp] = useState(false);
     const [otpType, setOtpType] = useState(null);
+    const { notifySuccess } = useNotification();
 
     const startOtp = useCallback(async (type, createOtp = true) => {
         setOtpErrorMsg("");
@@ -55,14 +57,17 @@ export default function useOtp({ username = null, new_password = null, onSuccess
                         const response = await AuthService.loginOtp({ username, otp_token });
                         const token = response.data.token
                         login(token)
+                        notifySuccess("Éxito", "Se ha conectado correctamente")
                         break;
 
                     case "REGISTRATION":
                         await AuthService.confirmAccount({ username, otp_token });
+                        notifySuccess("Éxito", "Se ha registrado correctamente")
                         break;
                     
                     case "RECOVER":
                         await AuthService.recoverAccountOtp({ username, otp_token, new_password });
+                        notifySuccess("Éxito", "Ha actualizado y recuperado su cuenta correctamente")
                         break;
 
                     default:

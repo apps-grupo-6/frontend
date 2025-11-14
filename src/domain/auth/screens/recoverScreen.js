@@ -23,7 +23,7 @@ export default function RecoverScreen({ navigation }) {
         startOtp, 
         submitOtp,
         resendOtp,
-    } = useOtp({ username, new_password });
+    } = useOtp({ username, new_password, onSuccess: () => navigation.replace("Login") });
 
     const handleContinueRecover = async () => {
         await submitRecover();
