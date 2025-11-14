@@ -61,7 +61,6 @@ export default function HomeScreen() {
   };
 
 
-  const handleReserve = (classData) => notifySuccess("Éxito", `Reservaste la clase: ${classData.class_discipline_name}. Recorda que tenes que confirmar tu presencia.`);
   const handleGymSelect = (gymName) => setSelectedGym(gymName === ALL_GYMS ? null : gymName);
   const handleTimeRangeSelect = (timeRange) => setSelectedTimeRange(timeRange === ALL_TIMES ? null : timeRange);
 
