@@ -4,6 +4,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import { ClassesService } from "@/domain/classes/services/classesService";
 import { toSpanishClassStatus, toSpanishParticipantStatus, canCancelFromParticipantStatus, canConfirmFromParticipantStatus } from "@/domain/classes/utils/statusUtils";
 import React, { useState } from "react";
+import { useNotification } from "@/context/notificationContext";
 
 function toDateSafe(value) {
   if (!value) return null;
@@ -40,6 +41,8 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
 
+  const { notifySuccess, notifyError } = useNotification();
+  
   // Título: disciplina > "Clase con {profesor}" > "Clase"
   const title =
     (discipline && discipline.trim()) ||
@@ -62,10 +65,10 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
                 try {
                   setLoadingConfirm(true);
                   await ClassesService.confirm(classId);
-                  Alert.alert("Éxito", "Tu presencia fue confirmada.");
+                  notifySuccess("Éxito", "Tu presencia fue confirmada.");
                   onActionDone && onActionDone();
                 } catch (e) {
-                  Alert.alert("Error", e.message || "No pudimos confirmar tu presencia.");
+                  notifyError("Error", e.message || "No pudimos confirmar tu presencia.");
                 } finally {
                   setLoadingConfirm(false);
                 }
@@ -90,10 +93,10 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
                         try {
                           setLoadingCancel(true);
                           await ClassesService.cancel(classId);
-                          Alert.alert("Cancelado", "Tu inscripción fue cancelada.");
+                          notifySuccess("Éxito", "Tu inscripción fue cancelada correctamente.");
                           onActionDone && onActionDone();
                         } catch (e) {
-                          Alert.alert("Error", e.message || "No pudimos cancelar tu inscripción.");
+                          notifyError("Error", e.message || "No pudimos cancelar tu inscripción.");
                         } finally {
                           setLoadingCancel(false);
                         }

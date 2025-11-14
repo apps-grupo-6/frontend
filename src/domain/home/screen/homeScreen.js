@@ -7,6 +7,7 @@ import Dropdown from "@/components/ui/Dropdown";
 import ClassCard from "@/domain/home/components/ClassCard";
 import useClasses from "@/domain/home/hooks/useClasses";
 import useLocations from "@/domain/home/hooks/useLocations";
+import { useNotification } from "@/context/notificationContext";
 
 const TIME_RANGES = ['Todos los horarios', 'Mañana (6:00 - 12:00)', 'Mediodía (12:00 - 16:00)', 'Tarde (16:00 - 20:00)', 'Noche (20:00 - 24:00)'];
 const ALL_GYMS = 'Todos los gimnasios';
@@ -18,8 +19,9 @@ export default function HomeScreen() {
 
   const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder } = useClasses(selectedGym, selectedTimeRange);
   const { gymNames, error: locationsError } = useLocations();
+  const { notifySuccess } = useNotification();
 
-  const handleReserve = (classData) => alert(`Reserva de clase: ${classData.class_discipline_name}`);
+  const handleReserve = (classData) => notifySuccess("Éxito", `Reservaste la clase: ${classData.class_discipline_name}. Recorda que tenes que confirmar tu presencia.`);
   const handleGymSelect = (gymName) => setSelectedGym(gymName === ALL_GYMS ? null : gymName);
   const handleTimeRangeSelect = (timeRange) => setSelectedTimeRange(timeRange === ALL_TIMES ? null : timeRange);
 
