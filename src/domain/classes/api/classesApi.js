@@ -12,12 +12,19 @@ const getHistory = async (since, until) => {
 
 const getClass = async (id) => api.get(`${BASE_URL}/${id}`);
 
-// Endpoints según backend Flask compartido:
-// PUT /<id>/participant/confirm
-// DELETE /<id>/participant
-const confirmClass = async (id) => api.put(`${BASE_URL}/${id}/participant/confirm`);
+const reservateClass = async (id) => api.post(`${BASE_URL}/${id}/participant`);
+
+const confirmClass = async (id) => api.post(`${BASE_URL}/${id}/participant/confirm`);
 
 const cancelClass = async (id) => api.delete(`${BASE_URL}/${id}/participant`);
 
+const professorStartsClass = async (id) => {
+  return api.post(`${BASE_URL}/${id}/start`);
+}
+
+const professorFinishesClass = async (id) => {
+  return api.delete(`${BASE_URL}/${id}`);
+}
+
 export { getUpcoming, getHistory };
-export { getClass, confirmClass, cancelClass };
+export { getClass, reservateClass, confirmClass, cancelClass, professorStartsClass, professorFinishesClass };

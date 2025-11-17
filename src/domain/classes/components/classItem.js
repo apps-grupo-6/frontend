@@ -82,11 +82,11 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
                 try {
                   setLoadingConfirm(true);
                   const result = await ClassesService.confirm(classId);
-                  notifySuccess("Éxito", "Tu presencia fue confirmada.");
+                  notifySuccess("Tu presencia fue confirmada.");
                   onActionDone && onActionDone();
                 } catch (e) {
                   console.error("Error al confirmar:", e);
-                  notifyError("Error", e.message || "No pudimos confirmar tu presencia.");
+                  notifyError( e.message || "No pudimos confirmar tu presencia.");
                 } finally {
                   setLoadingConfirm(false);
                 }
@@ -110,7 +110,7 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
                 try {
                   setLoadingCancel(true);
                   const result = await ClassesService.cancel(classId);
-                  notifySuccess("Éxito", "Tu inscripción fue cancelada.");
+                  notifySuccess("Tu inscripción fue cancelada.");
                   onActionDone && onActionDone();
                 } catch (e) {
                   console.error("Error al cancelar:", e);

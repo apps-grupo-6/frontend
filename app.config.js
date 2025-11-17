@@ -8,6 +8,9 @@ module.exports = ({ config }) => ({
     "expo-local-authentication"
   ],
   extra: {
-    API_URL: process.env.API_URL
+    API_URL: process.env.API_URL,
+    eas: {
+      projectId: process.env.EAS_PROJECT_ID,
+    }
   },
 });

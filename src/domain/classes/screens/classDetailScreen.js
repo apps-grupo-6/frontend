@@ -33,10 +33,10 @@ export default function ClassDetailScreen({ route }) {
     try {
       setActionLoading(true);
       await ClassesService.confirm(classId);
-      notifySuccess('Éxito', 'Tu presencia fue confirmada.');
+      notifySuccess('Tu presencia fue confirmada.');
       refresh();
     } catch (e) {
-      notifyError('Error', e.message || 'No pudimos confirmar tu presencia.');
+      notifyError('No pudimos confirmar tu presencia.');
     } finally {
       setActionLoading(false);
     }
@@ -55,10 +55,10 @@ export default function ClassDetailScreen({ route }) {
             try {
               setActionLoading(true);
               await ClassesService.cancel(classId);
-              notifySuccess("Éxito", "Tu inscripción fue cancelada correctamente.");
+              notifySuccess("Tu inscripción fue cancelada correctamente.");
               refresh();
             } catch (e) {
-              notifyError('Error', e.message || 'No pudimos cancelar tu inscripción.');
+              notifyError(e.message || "No pudimos cancelar tu inscripción.");
             } finally {
               setActionLoading(false);
             }

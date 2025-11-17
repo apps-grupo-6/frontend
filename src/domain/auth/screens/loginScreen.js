@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { SafeAreaView } from "react-native-safe-area-context";
 import WindowLayout from "@/components/layouts/windowLayout";
 import LoginForm from "@/domain/auth/components/loginForm";
@@ -8,34 +6,30 @@ import useOtp from "@/domain/otp/hooks/useOtp";
 import OtpModal from "@/domain/otp/components/otpModal";
 
 export default function LoginScreen({ navigation }) {
-  const { username, setUsername, password, setPassword, loading, authErrorMsg, submitLogin } = useLogin();
-  const {
-    showOtp, setShowOtp,
-    otp_token, setOtp,
-    otpErrorMsg,
-    loadingOtp,
-    startOtp, 
-    submitOtp,
-    resendOtp,
-  } = useOtp({ username });
+  const { username, setUsername, password, setPassword, loading, authErrorMsg, submitLogin, submitConfirmAccount } = useLogin();
+
+  const { showOtp, setShowOtp, otpToken, setOtp, otpErrorMsg, 
+          loadingOtp, createOtp, checkOtp, resendOtp, deleteOtp } = useOtp({ username });
 
   const goRegister = () => navigation.navigate("Register");
   const goRecover = () => navigation.navigate("Recover");  
-  const [otpTitle, setOtpTitle] = useState("");
 
   const handleSubmitLogin = async () => {
     const ok = await submitLogin();
-    if (ok === 0) {
-      setOtpTitle("Validación de acceso")
-      await startOtp({type: "LOGIN"}, false);
-    } else if (ok === 1){
-      setOtpTitle("Activación de cuenta pendiente")
-      await startOtp({type: "REGISTRATION"}, false);
-    }
+    
+    if (ok === 1) //if account is not activated
+      await createOtp({type: "REGISTRATION"});
+
   };
 
   const handleConfirmOtp = async () => {
-    await submitOtp();
+    const response = await checkOtp();
+
+    if (response.ok) {
+      await submitConfirmAccount();
+      await submitLogin();
+      await deleteOtp(response.data.otp_id);
+    }
   };
   
   return (
@@ -54,14 +48,14 @@ export default function LoginScreen({ navigation }) {
 
       <OtpModal
         visible={showOtp}
-        otp_token={otp_token}
+        otpToken={otpToken}
         setOtp={setOtp}
         onConfirm={handleConfirmOtp}
         onClose={() => setShowOtp(false)}
         onResend={resendOtp}
         loading={loadingOtp}
         otpErrorMsg={otpErrorMsg}
-        title={otpTitle}
+        title="Activación de cuenta pendiente"
       />
     </SafeAreaView>
   );

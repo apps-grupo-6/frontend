@@ -30,6 +30,7 @@ function Segmented({ value, onChange, options }) {
 function ProfileData({ user }) {
   const navigation = useNavigation();
   if (!user) return null;
+  console.log("Rendering ProfileData for user:", user);
   const rows = [
     { label: "Usuario", value: user.username },
     { label: "Nombre", value: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() },

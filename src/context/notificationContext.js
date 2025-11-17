@@ -34,9 +34,9 @@ export function NotificationProvider({ children }) {
         hideTimeout.current = setTimeout(() => hide(), 3000);
     }, [hide]);
 
-    const notifySuccess = (title, message) => show("success", title, message);
-    const notifyError = (title, message) => show("error", title, message);
-    const notifyInfo = (title, message) => show("info", title, message);
+    const notifySuccess = (title = "Éxito", message) => show("success", title, message);
+    const notifyError = (title = "Error", message) => show("error", title, message);
+    const notifyInfo = (title = "Información", message) => show("info", title, message);
 
     const value = { notifySuccess, notifyError, notifyInfo };
 

@@ -1,4 +1,7 @@
-*.env*
+.*
 node_modules/
 android/
-.expo/
+package-lock.json
+google-services.json
+app.json
+excuses404-gym-firebase.json
