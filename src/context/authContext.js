@@ -33,6 +33,8 @@ const storage = {
 
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState("");
+    const [roles, setRoles] = useState([]);
+    const [userId, setUserId] = useState(null);
     const tokenRef = useRef("");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -54,8 +56,10 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const login = async (token) => {
+    const login = async (token, roles, userId) => {
         await setAuthToken(token);
+        setRoles(roles);
+        setUserId(userId);
         setIsAuthenticated(true);
     }
 
@@ -125,7 +129,7 @@ export const AuthProvider = ({ children }) => {
         return () => api.interceptors.request.eject(id);
     }, []);
 
-    const value = useMemo(() => ({ token, isAuthenticated, isLoading, login, logout, setAuthToken }), [token, isAuthenticated, isLoading]);
+    const value = useMemo(() => ({ token, roles, isAuthenticated, isLoading, login, logout, setAuthToken }), [token, isAuthenticated, isLoading]);
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

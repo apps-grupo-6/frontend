@@ -11,4 +11,9 @@ const reserveClass = async (classId) => {
     return response;
 };
 
-export { getClasses, reserveClass };
+const cancelClass = async (classId) => {
+    const response = await api.delete(`${BASE_URL_CLASSES}/${classId}`);
+    return response;
+};
+
+export { getClasses, reserveClass, cancelClass };

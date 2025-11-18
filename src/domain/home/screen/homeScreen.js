@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const [selectedGym, setSelectedGym] = useState(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState(null);
 
-  const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder } = useClasses(selectedGym, selectedTimeRange);
+  const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder, cancelClass } = useClasses(selectedGym, selectedTimeRange);
   const { gymNames, error: locationsError } = useLocations();
   const { reserveClass, loading: reserving } = useReserveClass();
   const { data: upcomingClasses, refresh: refreshUpcoming } = useUpcomingClasses();
@@ -60,6 +60,22 @@ export default function HomeScreen() {
     }
   };
 
+  const handleCancelClass = async (classData) => {
+    console.log("Cancelando clase:", classData);
+    const ok = await cancelClass(classData.class_id);
+    
+    if (ok) {
+      notifySuccess(
+        "Clase cancelada",
+        `La clase ha sido cancelada correctamente.`
+      );
+    } else{
+      notifyError(
+        "Error al cancelar",
+        result.error || "No se pudo cancelar la clase"
+      );
+    }
+  };
 
   const handleGymSelect = (gymName) => setSelectedGym(gymName === ALL_GYMS ? null : gymName);
   const handleTimeRangeSelect = (timeRange) => setSelectedTimeRange(timeRange === ALL_TIMES ? null : timeRange);
@@ -143,6 +159,7 @@ export default function HomeScreen() {
                 <ClassCard
                   classData={item}
                   onReserve={handleReserve}
+                  onCancel={handleCancelClass}
                   imageIndex={index}
                   isReserved={isClassReserved(item.class_id)}
                 />

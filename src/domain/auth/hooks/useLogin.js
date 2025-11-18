@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AuthService } from "@/domain/auth/services/authService";
+import { NotificationsService } from "@/domain/notifications/services/notificationsService";
 import { useAuth } from "@/context/authContext";
 
 export default function useLogin() {
@@ -16,7 +17,10 @@ export default function useLogin() {
       setLoading(true);
       const response = await AuthService.login({ username: u, password: p });
       const token = response.data.token
-      login(token)
+      const roles = response.data.roles
+      const userId = response.data.user_id
+      login(token, roles, userId);
+      await NotificationsService.setNotificationToken();
       return 0;
     } catch (e) {
       if( e.message === "La cuenta no está activada.")

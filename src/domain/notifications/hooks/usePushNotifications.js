@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import { registerPushTokenInBackend } from "@/domain/notifications/services/notificationsService";
+import { NotificationsService } from "@/domain/notifications/services/notificationsService";
 
 export default function usePushNotifications() {
     const [expoPushToken, setExpoPushToken] = useState(null);
@@ -9,13 +9,13 @@ export default function usePushNotifications() {
     const responseListener = useRef(null);
 
     useEffect(() => {
-    (async () => {
-        const token = await registerPushTokenInBackend();
-        
-        if (token) {
-            setExpoPushToken(token);
-        }
-    })();
+        (async () => {
+            const token = await NotificationsService.setNotificationToken();
+            
+            if (token) {
+                setExpoPushToken(token);
+            }
+        })();
 
     // Listener cuando llega notificación en foreground
     notificationListener.current =
@@ -27,21 +27,12 @@ export default function usePushNotifications() {
     responseListener.current =
         Notifications.addNotificationResponseReceivedListener((response) => {
             console.log("User tapped notification:", response);
-            // acá podrías navegar según data, etc.
         });
 
     return () => {
-        if (notificationListener.current) {
-            Notifications.removeNotificationSubscription(
-                notificationListener.current
-            );
-        }
-        if (responseListener.current) {
-            Notifications.removeNotificationSubscription(
-                responseListener.current
-            );
-        }
-    };
+            notificationListener.current?.remove();
+            responseListener.current?.remove();
+        };
     }, []);
 
     return {

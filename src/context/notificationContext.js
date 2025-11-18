@@ -15,8 +15,8 @@ export function NotificationProvider({ children }) {
 
     const hide = useCallback(() => {
         if (hideTimeout.current) {
-        clearTimeout(hideTimeout.current);
-        hideTimeout.current = null;
+            clearTimeout(hideTimeout.current);
+            hideTimeout.current = null;
         }
         setNotification((prev) => ({ ...prev, visible: false }));
     }, []);
@@ -25,10 +25,10 @@ export function NotificationProvider({ children }) {
         if (hideTimeout.current) clearTimeout(hideTimeout.current);
 
         setNotification({
-        visible: true,
-        type,
-        title,
-        message,
+            visible: true,
+            type,
+            title,
+            message,
         });
 
         hideTimeout.current = setTimeout(() => hide(), 3000);
@@ -42,8 +42,8 @@ export function NotificationProvider({ children }) {
 
     return (
         <NotificationContext.Provider value={value}>
-        {children}
-        <NotificationView {...notification} onClose={hide} />
+            {children}
+            <NotificationView {...notification} onClose={hide} />
         </NotificationContext.Provider>
     );
 }

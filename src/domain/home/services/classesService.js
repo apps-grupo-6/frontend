@@ -47,4 +47,26 @@ export const ClassesService = {
             throw new Error("No se pudo realizar la reserva. Por favor, intenta de nuevo más tarde.");
         }
     },
+
+    async cancelClass(classId) {
+        try {
+            await api.cancelClass(classId);
+        } catch (e) {
+            const { status } = getResponseCodes(e);
+
+            if (status === 401 || status === 403) {
+                throw new Error("No tienes autorización para reservar esta clase.");
+            }
+
+            if (status === 404) {
+                throw new Error("No se encontró la clase.");
+            }
+
+            if (status === 400) {
+                throw new Error("No se pudo realizar la reserva. Verifica los datos.");
+            }
+
+            throw new Error("No se pudo realizar la reserva. Por favor, intenta de nuevo más tarde.");
+        }
+    },
 };

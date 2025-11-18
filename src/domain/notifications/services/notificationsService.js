@@ -35,8 +35,6 @@ async function getExpoPushToken() {
     }
 
     const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
-    console.log("Expo push token:", token);
-
     return token;
 }
 
@@ -46,8 +44,8 @@ export const NotificationsService = {
             const token = await getExpoPushToken();
             if (!token) return null;
             
-            const data = await api.setNotificationToken({ expo_push_token: token });
-            return data;
+            await api.setNotificationToken({ expo_push_token: token });
+            return token;
 
         } catch (e) {
             const { status } = getResponseCodes(e);
