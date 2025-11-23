@@ -27,8 +27,8 @@ function AppStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: true, title: "Editar Perfil" }} />
-  <Stack.Screen name="ClassDetail" component={ClassDetailScreen} options={{ headerShown: true, title: "Detalle de Clase" }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: true, title: "Editar perfil" }} />
+      <Stack.Screen name="ClassDetail" component={ClassDetailScreen} options={{ headerShown: true, title: "Detalle de clase" }} />
     </Stack.Navigator>
   );
 }

@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable, Text, StyleSheet, ActivityIndicator } from "react-native";
 import colors from "@/theme/colors";
 
@@ -14,12 +13,8 @@ export default function PrimaryButton({
   const isDisabled = disabled || loading;
 
   const handlePress = () => {
-    if (onPress && !isDisabled) {
-      console.log("Executing onPress...");
+    if (onPress && !isDisabled)
       onPress();
-    } else {
-      console.log("onPress NOT executed. Disabled:", isDisabled, "onPress:", !!onPress);
-    }
   };
 
   return (

@@ -6,7 +6,7 @@ const login = (credentials) => {
 };
 
 const confirmAccount = (userData) => {
-  return api.post(`${BASE_URL}/confirmAccount`, userData);
+  return api.post(`${BASE_URL}/confirm-account`, userData);
 };
 
 const recoverAccount = (userData) => {
@@ -17,9 +17,14 @@ const refreshToken = (jwt_token) => {
   return api.post(`${BASE_URL}/refresh`, jwt_token);
 };
 
+const logout = async () => {
+  return await api.post(`${BASE_URL}/logout`);
+};
+
 export {
   login,
   confirmAccount,
   recoverAccount,
-  refreshToken
+  refreshToken,
+  logout
 };

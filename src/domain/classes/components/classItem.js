@@ -24,52 +24,39 @@ function formatDate(value) {
 }
 
 export default function ClassItem({ item, onPress, onActionDone, showActions = true }) {
-  // Campos esperados desde backend de lista de clases del usuario
-  const discipline = item?.class_discipline_name; // Puede no venir en este endpoint
-  const professorFirst = item?.professor_first_name;
-  const professorLast = item?.professor_last_name;
-  const professorFull = [professorFirst, professorLast].filter(Boolean).join(" ");
-  const rawDate = item?.class_scheduled_at;
-  const participantStatus = item?.participant_status;
-  const classStatus = item?.class_status || item?.status;
-  const displayStatus = toSpanishParticipantStatus(participantStatus) || toSpanishClassStatus(classStatus);
-  const classId = item?.id ?? item?.class_id;
-
-  const canConfirm = canConfirmFromParticipantStatus(participantStatus);
-  const canCancel = canCancelFromParticipantStatus(participantStatus);
-
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingCancel, setLoadingCancel] = useState(false);
 
   const { notifySuccess, notifyError } = useNotification();
   
-  // Título: disciplina > "Clase con {profesor}" > "Clase"
-  const title =
-    (discipline && discipline.trim()) ||
-    (professorFull ? `Clase con ${professorFull}` : "Clase");
+  const discipline = item.class_discipline_name;
+  const professorFirst = item.professor_first_name;
+  const professorLast = item.professor_last_name;
+  const professorFull = [professorFirst, professorLast].filter(Boolean).join(" ");
+  const rawDate = item.class_scheduled_at;
+  const participantStatus = item.participant_status;
+  const classStatus = item.class_status || item.status;
+  const displayStatus = toSpanishParticipantStatus(participantStatus) || toSpanishClassStatus(classStatus);
+  const classId = item.class_id;
+  const canConfirm = canConfirmFromParticipantStatus(participantStatus);
+  const canCancel = canCancelFromParticipantStatus(participantStatus);
+
+  const title = (discipline ? `Clase de ${discipline.trim()}` : "Clase");
 
   return (
     <View style={styles.card}>
-      {onPress ? (
-        <Pressable
-          onPress={onPress}
-          android_ripple={{ color: colors.surfaceAlt }}
-        >
-          <View>
-            <Text style={styles.title}>{title}</Text>
-            {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
-            {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
-            {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
-          </View>
-        </Pressable>
-      ) : (
+      <Pressable
+        onPress={onPress}
+        android_ripple={{ color: colors.surfaceAlt }}
+      >
+    
         <View>
           <Text style={styles.title}>{title}</Text>
           {professorFull ? <Text style={styles.meta}>Profesor: {professorFull}</Text> : null}
           {rawDate ? <Text style={styles.subtitle}>Inicio: {formatDate(rawDate)}</Text> : null}
           {(displayStatus) ? <Text style={styles.badge}>{displayStatus}</Text> : null}
         </View>
-      )}
+      </Pressable>
 
       {showActions && (canConfirm || canCancel) && (
         <View style={styles.actions}>
@@ -81,7 +68,7 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
               onPress={async () => {
                 try {
                   setLoadingConfirm(true);
-                  const result = await ClassesService.confirm(classId);
+                  await ClassesService.participantConfirm(classId);
                   notifySuccess("Tu presencia fue confirmada.");
                   onActionDone && onActionDone();
                 } catch (e) {
@@ -95,7 +82,7 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
           )}
           {canCancel && (
             <PrimaryButton
-              title="Cancelar"
+              title="Cancelar asistencia"
               variant="secondary"
               loading={loadingCancel}
               onPress={async () => {
@@ -109,7 +96,7 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
 
                 try {
                   setLoadingCancel(true);
-                  const result = await ClassesService.cancel(classId);
+                  await ClassesService.participantCancel(classId);
                   notifySuccess("Tu inscripción fue cancelada.");
                   onActionDone && onActionDone();
                 } catch (e) {

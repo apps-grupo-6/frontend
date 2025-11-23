@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, Image } from "react-native";
 import colors from "@/theme/colors";
 import { getMockedImages } from "@/utils/getMockedImages";
 import { useAuth } from "@/context/authContext";
 
-export default function ClassCard({ classData, onReserve, onCancel, onEditClass = null, imageIndex = 0, isReserved = false }) {
+export default function ClassCard({ classData, onReserve, onCancel, onPress, onEditClass = null, imageIndex = 0, isReserved = false }) {
     const { class_discipline_name, class_status, professor_first_name, class_scheduled_at, gym_name, professor_id } = classData;
     const { roles, userId } = useAuth();
     const imageUrl = getMockedImages()[imageIndex % getMockedImages().length].url;
@@ -21,8 +21,8 @@ export default function ClassCard({ classData, onReserve, onCancel, onEditClass 
         "finished": { color: "#4caf50", text: "Finalizada" },
         "not started": { color: "#ff9800", text: "No iniciada" }
     };
-    const canManageClass = roles.includes("BACKEND DEVELOPER") || (roles.includes("PROFESSOR") && professor_id === userId);
-
+    const isClassProfessor =  (roles.includes("TRAINER") && professor_id === userId)
+    const canManageClass = (roles.includes("BACKEND DEVELOPER") || isClassProfessor);
     const getStatusConfig = (status) => statusConfig[status?.toLowerCase()] || { color: colors.textMuted, text: status || "Sin estado" };
     const statusInfo = getStatusConfig(class_status);
 
@@ -35,68 +35,74 @@ export default function ClassCard({ classData, onReserve, onCancel, onEditClass 
 
     return (
         <View style={styles.card}>
-            <View style={styles.imageContainer}>
-                <Image source={{ uri: imageUrl }} style={styles.classImage} resizeMode="cover" />
-            </View>
-
-            <View style={styles.content}>
-                <Text style={styles.className} numberOfLines={2}>
-                    {class_discipline_name || "Clase sin nombre"}
-                </Text>
-
-                <View style={styles.statusContainer}>
-                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.color + "20" }]}>
-                        <Text style={[styles.statusText, { color: statusInfo.color }]}>
-                            {statusInfo.text}
-                        </Text>
-                    </View>
+            <Pressable
+                onPress={onPress}
+                android_ripple={{ color: colors.surfaceAlt }}
+            >
+                    
+                <View style={styles.imageContainer}>
+                    <Image source={{ uri: imageUrl }} style={styles.classImage} resizeMode="cover" />
                 </View>
 
-                {renderInfoRow("Profesor", professor_first_name || "No asignado")}
-                {renderInfoRow("Fecha", formatDate(class_scheduled_at))}
-                {renderInfoRow("Sede", gym_name || "No especificada")}
-
-                <TouchableOpacity 
-                    style={[
-                        styles.reserveButton, 
-                        isReserved && styles.reservedButton
-                    ]} 
-                    onPress={() => !isReserved && onReserve?.(classData)} 
-                    activeOpacity={isReserved ? 1 : 0.8}
-                    disabled={isReserved}
-                >
-                    <Text style={[
-                        styles.reserveButtonText,
-                        isReserved && styles.reservedButtonText
-                    ]}>
-                        {isReserved ? "✓ Reservado" : "Reservar"}
+                <View style={styles.content}>
+                    <Text style={styles.className} numberOfLines={2}>
+                        {class_discipline_name || "Clase sin nombre"}
                     </Text>
-                </TouchableOpacity>
 
-                {canManageClass && (
-                    <View style={styles.adminActionsRow}>
-                        <TouchableOpacity
-                            style={[styles.adminButton, styles.cancelButton]}
-                            onPress={() => onCancel?.(classData)}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.adminButtonText}>
-                                Cancelar clase
+                    <View style={styles.statusContainer}>
+                        <View style={[styles.statusBadge, { backgroundColor: statusInfo.color + "20" }]}>
+                            <Text style={[styles.statusText, { color: statusInfo.color }]}>
+                                {statusInfo.text}
                             </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.adminButton, styles.editButton]}
-                            onPress={() => onEditClass?.(classData)}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.adminButtonText}>
-                                Modificar clase
-                            </Text>
-                        </TouchableOpacity>
+                        </View>
                     </View>
-                )}
-            </View>
+
+                    {renderInfoRow("Profesor", professor_first_name || "No asignado")}
+                    {renderInfoRow("Fecha", formatDate(class_scheduled_at))}
+                    {renderInfoRow("Sede", gym_name || "No especificada")}
+
+                    {!canManageClass ? (
+                        <TouchableOpacity 
+                            style={[
+                                styles.reserveButton, 
+                                isReserved && styles.reservedButton
+                            ]} 
+                            onPress={() => !isReserved && onReserve?.(classData)} 
+                            activeOpacity={isReserved ? 1 : 0.8}
+                            disabled={isReserved}
+                        >
+                            <Text style={[
+                                styles.reserveButtonText,
+                                isReserved && styles.reservedButtonText
+                            ]}>
+                                {isReserved ? "✓ Reservado" : "Reservar"}
+                            </Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <View style={styles.adminActionsRow}>
+                            <TouchableOpacity
+                                style={[styles.adminButton, styles.cancelButton]}
+                                onPress={() => onCancel?.(classData)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.adminButtonText}>
+                                    Cancelar clase
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.adminButton, styles.editButton]}
+                                onPress={() => onEditClass?.(classData)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.adminButtonText}>
+                                    Modificar clase
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+            </Pressable>
         </View>
     );
 }

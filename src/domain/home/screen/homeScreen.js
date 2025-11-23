@@ -10,6 +10,7 @@ import useLocations from "@/domain/home/hooks/useLocations";
 import useReserveClass from "@/domain/home/hooks/useReserveClass";
 import useUpcomingClasses from "@/domain/classes/hooks/useUpcomingClasses";
 import { useNotification } from "@/context/notificationContext";
+import { useNavigation } from "@react-navigation/native";
 
 const TIME_RANGES = ['Todos los horarios', 'Mañana (6:00 - 12:00)', 'Mediodía (12:00 - 16:00)', 'Tarde (16:00 - 20:00)', 'Noche (20:00 - 24:00)'];
 const ALL_GYMS = 'Todos los gimnasios';
@@ -18,12 +19,13 @@ const ALL_TIMES = 'Todos los horarios';
 export default function HomeScreen() {
   const [selectedGym, setSelectedGym] = useState(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState(null);
-
-  const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder, cancelClass } = useClasses(selectedGym, selectedTimeRange);
+  
   const { gymNames, error: locationsError } = useLocations();
+  const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder, cancelClass } = useClasses(selectedGym, selectedTimeRange);
   const { reserveClass, loading: reserving } = useReserveClass();
   const { data: upcomingClasses, refresh: refreshUpcoming } = useUpcomingClasses();
   const { notifySuccess, notifyError } = useNotification();
+  const navigation = useNavigation();
   
   const reservedClassIds = useMemo(() => {
     if (!upcomingClasses || !Array.isArray(upcomingClasses)) return new Set();
@@ -61,7 +63,6 @@ export default function HomeScreen() {
   };
 
   const handleCancelClass = async (classData) => {
-    console.log("Cancelando clase:", classData);
     const ok = await cancelClass(classData.class_id);
     
     if (ok) {
@@ -162,6 +163,7 @@ export default function HomeScreen() {
                   onCancel={handleCancelClass}
                   imageIndex={index}
                   isReserved={isClassReserved(item.class_id)}
+                  onPress={() => navigation.navigate("ClassDetail", { classId: item.class_id })}
                 />
               )}
               contentContainerStyle={styles.listContent}

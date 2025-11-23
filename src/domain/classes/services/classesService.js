@@ -34,9 +34,9 @@ export const ClassesService = {
     }
   },
 
-  async confirm(id) {
+  async participantConfirm(id) {
     try {
-      const res = await api.confirmClass(id);
+      const res = await api.participantConfirm(id);
       return res?.data ?? res;
     } catch (e) {
       const { status } = getResponseCodes(e);
@@ -47,7 +47,20 @@ export const ClassesService = {
     }
   },
 
-  async cancel(id) {
+  async participantCancel(id) {
+    try {
+      const res = await api.participantCancel(id);
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      if (status === 404) throw new Error("Clase no encontrada.");
+      if (status === 409) throw new Error("No podés cancelar tu participación en esta clase.");
+      throw new Error("No pudimos cancelar tu inscripción.");
+    }
+  },
+
+  async cancelClass(id) {
     try {
       const res = await api.cancelClass(id);
       return res?.data ?? res;

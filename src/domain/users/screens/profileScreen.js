@@ -62,10 +62,8 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
 
   const { data: me, loading: loadingMe, error: errorMe, refresh: refetchMe } = useUserInfo();
-  const { data: upcoming, loading: loadingUpcoming, error: errorUpcoming, refresh: refetchUpcoming } =
-    useUpcomingClasses();
-  const { data: history, loading: loadingHistory, error: errorHistory, refresh: refetchHistory } =
-    useClassesHistory();
+  const { data: upcoming, loading: loadingUpcoming, error: errorUpcoming, refresh: refetchUpcoming } = useUpcomingClasses();
+  const { data: history, loading: loadingHistory, error: errorHistory, refresh: refetchHistory } = useClassesHistory();
 
   useFocusEffect(
     useCallback(() => {

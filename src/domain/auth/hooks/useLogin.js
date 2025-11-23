@@ -17,9 +17,7 @@ export default function useLogin() {
       setLoading(true);
       const response = await AuthService.login({ username: u, password: p });
       const token = response.data.token
-      const roles = response.data.roles
-      const userId = response.data.user_id
-      login(token, roles, userId);
+      await login(token);
       await NotificationsService.setNotificationToken();
       return 0;
     } catch (e) {

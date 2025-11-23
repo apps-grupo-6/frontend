@@ -12,7 +12,7 @@ const reserveClass = async (classId) => {
 };
 
 const cancelClass = async (classId) => {
-    const response = await api.delete(`${BASE_URL_CLASSES}/${classId}`);
+    const response = await api.patch(`${BASE_URL_CLASSES}/${classId}/cancel`);
     return response;
 };
 

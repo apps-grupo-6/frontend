@@ -77,18 +77,15 @@ export const AuthService = {
       if (status == 400 && specificCode == "0410")
         throw new Error("La cuenta está bloqueada. Si crees que se trata de un error, contacta al soporte.");
       
-      console.log(e);
       throw new Error("No se pudo procesar la solicitud. Por favor, intenta de nuevo más tarde.");
     }
   },
 
-  /**
-   * Requests to refresh user's jwtToken
-   * @param {Object} jwtToken - { jwtToken }
-   * @returns {Promise<Object>} - server response
-   */
-  async refreshToken(jwtToken) {
-    const data = await api.refreshToken(jwtToken);
-    return data;
+  async refreshToken() {
+    return await api.refreshToken();
+  },
+
+  async logout() {
+    return await api.logout();
   },
 };
