@@ -2,6 +2,51 @@ import * as api from "@/domain/home/api/classesApi";
 import { getResponseCodes } from "@/utils/httpCodeParser";
 
 export const ClassesService = {
+      async getUpcoming() {
+    try {
+      return await api.getUpcoming();
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      throw new Error("No pudimos obtener tus próximas clases.");
+    }
+  },
+
+  async getHistory({ since, until } = {}) {
+    try {
+      return await api.getHistory(since, until);
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      throw new Error("No pudimos obtener tu historial de clases.");
+    }
+  },
+
+  async getById(id) {
+    try {
+      const res = await api.getClass(id);
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      if (status === 404) throw new Error("Clase no encontrada.");
+      throw new Error("No pudimos obtener el detalle de la clase.");
+    }
+  },
+
+  async confirm(id) {
+    try {
+      const res = await api.confirmClass(id);
+      return res?.data ?? res;
+    } catch (e) {
+      const { status } = getResponseCodes(e);
+      if (status === 401) throw new Error("Sesión expirada. Iniciá sesión nuevamente.");
+      if (status === 404) throw new Error("Clase no encontrada.");
+      if (status === 409) throw new Error("No podés confirmar esta clase (cupo completo o ya confirmada).");
+      throw new Error("No pudimos confirmar tu presencia.");
+    }
+   },
+
     async getClasses() {
         try {
             const data = await api.getClasses();
@@ -38,6 +83,28 @@ export const ClassesService = {
 
             if (status === 409) {
                 throw new Error("Ya estás registrado en esta clase o la clase está llena.");
+            }
+
+            if (status === 400) {
+                throw new Error("No se pudo realizar la reserva. Verifica los datos.");
+            }
+
+            throw new Error("No se pudo realizar la reserva. Por favor, intenta de nuevo más tarde.");
+        }
+    },
+
+    async cancelClass(classId) {
+        try {
+            await api.cancelClass(classId);
+        } catch (e) {
+            const { status } = getResponseCodes(e);
+
+            if (status === 401 || status === 403) {
+                throw new Error("No tienes autorización para reservar esta clase.");
+            }
+
+            if (status === 404) {
+                throw new Error("No se encontró la clase.");
             }
 
             if (status === 400) {

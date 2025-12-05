@@ -11,7 +11,16 @@ export default function useUpcomingClasses() {
     setError("");
     try {
       const res = await ClassesService.getUpcoming();
-      setData(Array.isArray(res?.data) ? res.data : res);
+      const allClasses = Array.isArray(res?.data) ? res.data : res;
+      
+      // Filtrar clases canceladas
+      const cancelledStatuses = ["cancelled", "canceled", "cancelado", "cancelada"];
+      const activeClasses = allClasses.filter(cls => {
+        const status = (cls.participant_status || "").toLowerCase().trim();
+        return !cancelledStatuses.includes(status);
+      });
+      
+      setData(activeClasses);
     } catch (e) {
       setError(e?.message || "Error inesperado");
     } finally {

@@ -2,42 +2,38 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import WindowLayout from "@/components/layouts/windowLayout";
 import RecoverForm from "@/domain/auth/components/recoverForm";
 import useRecover from "@/domain/auth/hooks/useRecover";
+import useLogin from "@/domain/auth/hooks/useLogin";
 import useOtp from "@/domain/otp/hooks/useOtp";
 import OtpModal from "@/domain/otp/components/otpModal";
 
 export default function RecoverScreen({ navigation }) {
-    const {
-        username, setUsername,
-        new_password, setNewPassword,
-        loading, errorMsg,
-        showPasswordField,
-        submitRecover,
-        newPasswordCheck,
-    } = useRecover();
+    const { username, setUsername, newPassword, setNewPassword, loading, errorMsg, 
+            showPasswordField, checkRecoverAccount, newPasswordCheck, submitRecover } = useRecover();
 
-    const {
-        showOtp, setShowOtp,
-        otp_token, setOtp,
-        otpErrorMsg,
-        loadingOtp,
-        startOtp, 
-        submitOtp,
-        resendOtp,
-    } = useOtp({ username, new_password, onSuccess: () => navigation.replace("Login") });
+    const { showOtp, setShowOtp, otpToken, setOtp, otpErrorMsg, 
+            loadingOtp, createOtp, checkOtp, resendOtp, deleteOtp } = useOtp({ username });
+    
+    const { submitLogin } = useLogin();
 
     const handleContinueRecover = async () => {
-        await submitRecover();
+        await checkRecoverAccount();
     };
 
-    const handleSubmitRecover = async () => {
+    const handleCheckRecoverAccount = async () => {
         const ok = await newPasswordCheck()
         
         if (ok)
-            await startOtp({type: "RECOVER"}, false);
+            await createOtp({type: "RECOVER"});
     };
 
     const handleConfirmOtp = async () => {
-        await submitOtp();
+        const response = await checkOtp();
+
+        if (response.ok) {
+            await submitRecover();
+            await submitLogin(username, newPassword);
+            await deleteOtp(response.data.otp_id);
+        }
     };
 
     const goLogin = () => navigation.navigate("Login");
@@ -47,20 +43,20 @@ export default function RecoverScreen({ navigation }) {
                 <RecoverForm
                     username={username}
                     setUsername={setUsername}
-                    new_password={new_password}
+                    newPassword={newPassword}
                     setNewPassword={setNewPassword}
                     loading={loading}
                     errorMsg={errorMsg}
                     showPasswordField={showPasswordField}
                     onContinue={handleContinueRecover}
                     onGoLogin={goLogin}
-                    onSubmit={handleSubmitRecover}
+                    onSubmit={handleCheckRecoverAccount}
                 />
             </WindowLayout>
 
             <OtpModal
                 visible={showOtp}
-                otp_token={otp_token}
+                otpToken={otpToken}
                 setOtp={setOtp}
                 onConfirm={handleConfirmOtp}
                 onClose={() => setShowOtp(false)}

@@ -4,12 +4,12 @@ import { isValidPassword } from "@/domain/auth/utils/authUtils"
 
 export default function useRecover() {
     const [username, setUsername] = useState("");
-    const [new_password, setNewPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [showPasswordField, setShowPasswordField] = useState(false);
 
-    const submitRecover = async () => {
+    const checkRecoverAccount = async () => {
         setErrorMsg("");
         setLoading(true);
 
@@ -28,7 +28,7 @@ export default function useRecover() {
         setLoading(true);
         
         try {
-            isValidPassword(new_password)
+            isValidPassword(newPassword)
             return true;
         } catch (e) {
             setErrorMsg(e.message);
@@ -38,14 +38,28 @@ export default function useRecover() {
         }
     };
 
+    const submitRecover = async () => {
+        setErrorMsg("");
+        setLoading(true);
+
+        try {
+            await AuthService.recoverAccount({ username, new_password: newPassword });
+        } catch (e) {
+            setErrorMsg(e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         username, setUsername,
-        new_password, setNewPassword,
+        newPassword, setNewPassword,
         loading, 
         errorMsg,
         showPasswordField,
 
-        submitRecover,
-        newPasswordCheck
+        checkRecoverAccount,
+        newPasswordCheck,
+        submitRecover
     };
 }

@@ -28,13 +28,13 @@ export default function EditProfileScreen() {
       });
       
       if (result.ok) {
-        notifySuccess("Éxito", "Tus datos fueron actualizados correctamente.");
+        notifySuccess("Tus datos fueron actualizados correctamente.");
         navigation.goBack();
       } else {
         throw new Error(result.message || "No pudimos actualizar tus datos.");
       }
     } catch (e) {
-      notifyError("Error", e.message || "No pudimos actualizar tus datos.");
+      notifyError( e.message || "No pudimos actualizar tus datos.");
     } finally {
       setSaving(false);
     }

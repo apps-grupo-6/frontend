@@ -17,15 +17,18 @@ export default function useRegister() {
     } catch (e) {
       setErrorMsg(e.message);
       return false;
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const finishRegister = async () => {
+    setLoading(false);
   };
 
   return { 
     form, setField, 
     loading, 
     errorMsg,
-    submitRegister 
+    submitRegister,
+    finishRegister
   };
 }
