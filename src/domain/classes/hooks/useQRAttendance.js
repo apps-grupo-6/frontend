@@ -2,6 +2,8 @@ import { useState, useCallback } from "react";
 import { ClassesService } from "@/domain/classes/services/classesService";
 import { LocationsService } from "@/domain/home/services/locationsService";
 
+const BLOCK_CONFIRM_STATUS = ['EXPIRED', 'ABSENT', 'PRESENT', 'CANCELLED', 'CONFIRMED'];
+
 export default function useQRAttendance() {
     const [loading, setLoading] = useState(false);
 
@@ -63,53 +65,33 @@ export default function useQRAttendance() {
                 };
             }
 
-            // 4. Filtrar clases que ya están confirmadas
-            const confirmedStatuses = ["confirmed", "confirmada", "checked_in", "asistio", "attended"];
-            const pendingClasses = todayClassesAtGym.filter(cls => {
-                const status = (cls.participant_status || "").toLowerCase().trim();
-                return !confirmedStatuses.includes(status);
+            // 4. Filtrar clases cuyo estado NO esté bloqueado
+            const availableClasses = todayClassesAtGym.filter(cls => {
+                const status = (cls.participant_status || cls.class_status || "").toUpperCase().trim();
+                return !BLOCK_CONFIRM_STATUS.includes(status);
             });
 
-            if (pendingClasses.length === 0) {
+            if (availableClasses.length === 0) {
                 return {
                     success: false,
-                    error: `Ya confirmaste todas tus clases de hoy en ${gymDisplayName}`,
-                    type: "ALL_CONFIRMED"
+                    error: `No tenés clases disponibles para confirmar hoy en ${gymDisplayName}`,
+                    type: "NO_AVAILABLE_CLASSES"
                 };
             }
 
-            // 5. Ordenar las clases pendientes por hora de inicio (más temprano primero)
-            const now = new Date();
-            const sortedClasses = pendingClasses.sort((a, b) => {
+            // 5. Ordenar las clases disponibles por hora de inicio (más temprano primero)
+            const sortedClasses = availableClasses.sort((a, b) => {
                 const dateA = new Date(a.class_scheduled_at || a.scheduled_at || a.date);
                 const dateB = new Date(b.class_scheduled_at || b.scheduled_at || b.date);
                 return dateA - dateB;
             });
 
-            // 6. Buscar la clase más próxima:
-            // - Primero buscar clases que aún no empezaron o empezaron hace menos de 60 min
-            // - Priorizar las que están por empezar
-            let classToConfirm = null;
-
-            for (const cls of sortedClasses) {
-                const classDate = new Date(cls.class_scheduled_at || cls.scheduled_at || cls.date);
-                const diffMinutes = (classDate - now) / (1000 * 60);
-
-                // Clase que empieza en el futuro o empezó hace menos de 60 minutos
-                if (diffMinutes >= -60) {
-                    classToConfirm = cls;
-                    break;
-                }
-            }
-
-            // Si todas las clases pendientes ya pasaron hace más de 60 min, tomar la última
-            if (!classToConfirm) {
-                classToConfirm = sortedClasses[sortedClasses.length - 1];
-            }
+            // 6. Tomar la primera clase del día (la más temprana)
+            const classToConfirm = sortedClasses[0];
             const classId = classToConfirm.class_id || classToConfirm.id;
 
             // 7. Confirmar asistencia
-            await ClassesService.confirm(classId);
+            await ClassesService.participantConfirm(classId);
 
             return {
                 success: true,

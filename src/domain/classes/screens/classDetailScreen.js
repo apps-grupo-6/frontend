@@ -7,12 +7,15 @@ import { toSpanishClassStatus } from "@/domain/classes/utils/statusUtils";
 import GymMap from "@/domain/locations/components/gymMap";
 import { STATUS_BADGE_STYLES } from "@/domain/classes/config/constants";
 
-function Line({ label, value, highlight = false  }) {
+function Line({ label, value, icon }) {
   if (!value && value !== 0) return null;
   return (
     <View style={styles.line}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+      {icon && <Text style={styles.icon}>{icon}</Text>}
+      <View style={styles.lineContent}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.value}>{value}</Text>
+      </View>
     </View>
   );
 }
@@ -70,42 +73,51 @@ export default function ClassDetailScreen({ route }) {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.card}>
-        <View style={styles.header}>
-          <View style={styles.headerMain}>
+      {/* Header Card con título y estado */}
+      <View style={styles.headerCard}>
+        <View style={styles.headerContent}>
+          <Text style={styles.emoji}>🏋️</Text>
+          <View style={styles.headerTextContainer}>
             <Text style={styles.title}>{title}</Text>
-            {gym && <Text style={styles.subtitle}>{gym}</Text>}
-          </View>
-
-          {displayStatus && (
-            <View style={styles.badgeWrapper}>
-              <Text style={styles.sectionTitle}>Estado de la clase</Text>
-              <View style={[styles.badge, badgeDynamicStyle]}>
-                <Text style={styles.badgeText}>{displayStatus}</Text>
+            {gym && (
+              <View style={styles.gymRow}>
+                <Text style={styles.gymIcon}>📍</Text>
+                <Text style={styles.subtitle}>{gym}</Text>
               </View>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detalles de la clase</Text>
-          <Line label="Profesor/a" value={professor}/>
-          <Line label="Fecha y hora programada para la clase" value={scheduled}/>
-          <Line label="Cupos restantes" value={remainingCapacity}/>
-          <Line label="Finalizó" value={ended}/>
-          <Line label="Dirección" value={gymAddress}/>
-        </View>
-
-        <View style={styles.divider} />
-        <View style={styles.mapSection}>
-          <View style={styles.mapHeaderRow}>
-            <Text style={styles.sectionTitle}>Ubicación del gimnasio</Text>
+            )}
           </View>
-          <Text style={styles.mapHint}>
-            Podés hacer zoom y moverte por el mapa para ver mejor la zona.
-          </Text>
+        </View>
+        
+        {displayStatus && (
+          <View style={[styles.badge, badgeDynamicStyle]}>
+            <Text style={styles.badgeText}>{displayStatus}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Detalles Card */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>📋 Detalles de la clase</Text>
+        <View style={styles.detailsContainer}>
+          <Line icon="👤" label="Profesor/a" value={professor}/>
+          <Line icon="📅" label="Inicio" value={scheduled}/>
+          {remainingCapacity !== null && remainingCapacity !== undefined && (
+            <Line icon="👥" label="Asistentes confirmados" value={remainingCapacity}/>
+          )}
+          {ended && <Line icon="⏱️" label="Finalizó" value={ended}/>}
+          {gymAddress && <Line icon="🏠" label="Dirección" value={gymAddress}/>}
+        </View>
+      </View>
+
+      {/* Mapa Card */}
+      <View style={styles.card}>
+        <View style={styles.mapHeader}>
+          <Text style={styles.sectionTitle}>🗺️ Ubicación del gimnasio</Text>
+        </View>
+        <Text style={styles.mapHint}>
+          Podés hacer zoom y moverte por el mapa para explorar la zona
+        </Text>
+        <View style={styles.mapContainer}>
           <GymMap
             latitude={latitude}
             longitude={longitude}
@@ -125,6 +137,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 32,
   },
   center: {
     flex: 1,
@@ -133,129 +146,134 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: colors.bg,
   },
-  loadingText: {
-    marginTop: 8,
-    fontSize: 14 * FONT_SCALE,
-    color: colors.textMuted,
-  },
-  errorText: {
-    fontSize: 15 * FONT_SCALE,
-    color: colors.text,
-  },
 
-  card: {
+  // Header Card
+  headerCard: {
     backgroundColor: colors.surface,
-    borderRadius: 18,
-    padding: 18,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
     shadowColor: "#000",
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
-
-  header: {
+  headerContent: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 8,
+    alignItems: "center",
+    marginBottom: 16,
   },
-  headerMain: {
+  emoji: {
+    fontSize: 48,
+    marginRight: 16,
+  },
+  headerTextContainer: {
     flex: 1,
-    paddingRight: 8,
   },
   title: {
-    fontSize: 23 * FONT_SCALE,
-    fontWeight: "700",
+    fontSize: 26 * FONT_SCALE,
+    fontWeight: "800",
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  gymRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  gymIcon: {
+    fontSize: 16,
+    marginRight: 6,
   },
   subtitle: {
-    fontSize: 14 * FONT_SCALE,
+    fontSize: 15 * FONT_SCALE,
     color: colors.textMuted,
-  },
-
-  badgeWrapper: {
-    alignItems: "flex-end",
-  },
-  badgeLabel: {
-    fontSize: 11 * FONT_SCALE,
-    color: colors.textMuted,
-    marginBottom: 3,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    fontWeight: "600",
   },
   badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 999,
+    alignSelf: "flex-start",
   },
   badgeText: {
-    fontSize: 11 * FONT_SCALE,
+    fontSize: 12 * FONT_SCALE,
     fontWeight: "700",
     textTransform: "uppercase",
     color: "#fff",
-    letterSpacing: 0.8,
+    letterSpacing: 1,
   },
 
-  divider: {
-    height: 1,
-    backgroundColor: "#2a2a34",
-    marginVertical: 14,
-    opacity: 0.7,
-  },
-
-  section: {
-    marginTop: 4,
-    marginBottom: 12,
+  // Detail Cards
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
   sectionTitle: {
-    fontSize: 16 * FONT_SCALE,
-    fontWeight: "600",
+    fontSize: 18 * FONT_SCALE,
+    fontWeight: "700",
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  detailsContainer: {
+    gap: 16,
   },
 
+  // Lines with icons
   line: {
-    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: colors.bg,
+    padding: 14,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  icon: {
+    fontSize: 20,
+    marginRight: 12,
+    marginTop: 2,
+  },
+  lineContent: {
+    flex: 1,
   },
   label: {
     fontSize: 12 * FONT_SCALE,
-    fontWeight: "500",
+    fontWeight: "600",
     color: colors.textMuted,
-    marginBottom: 2,
+    marginBottom: 4,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   value: {
     fontSize: 15 * FONT_SCALE,
     color: colors.text,
+    fontWeight: "500",
+    lineHeight: 22,
   },
 
-  mapSection: {
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  mapHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  // Map Section
+  mapHeader: {
+    marginBottom: 8,
   },
   mapHint: {
     fontSize: 13 * FONT_SCALE,
     color: colors.textMuted,
-    marginBottom: 8,
-    marginTop: 2,
+    marginBottom: 16,
+    fontStyle: "italic",
   },
-  mapCard: {
-    overflow: "hidden",
+  mapContainer: {
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#272735",
-  },
-  mapFallback: {
-    fontSize: 13 * FONT_SCALE,
-    color: colors.textMuted,
-    marginTop: 4,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: colors.primary + "40",
   },
 });
