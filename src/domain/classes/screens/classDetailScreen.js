@@ -102,7 +102,7 @@ export default function ClassDetailScreen({ route }) {
           <Line icon="👤" label="Profesor/a" value={professor}/>
           <Line icon="📅" label="Inicio" value={scheduled}/>
           {remainingCapacity !== null && remainingCapacity !== undefined && (
-            <Line icon="👥" label="Asistentes confirmados" value={remainingCapacity}/>
+            <Line icon="👥" label="Cupos restantes" value={remainingCapacity}/>
           )}
           {ended && <Line icon="⏱️" label="Finalizó" value={ended}/>}
           {gymAddress && <Line icon="🏠" label="Dirección" value={gymAddress}/>}
