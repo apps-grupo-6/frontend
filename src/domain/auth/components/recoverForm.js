@@ -5,7 +5,7 @@ import colors from "@/theme/colors";
 
 export default function RecoverForm({
   username, setUsername,
-  new_password, setNewPassword,
+  newPassword, setNewPassword,
   loading, 
   errorMsg, 
   showPasswordField,
@@ -43,7 +43,7 @@ export default function RecoverForm({
         <>
           <TextField
             label="Nueva contraseña"
-            value={new_password}
+            value={newPassword}
             onChangeText={setNewPassword}
             placeholder="••••••••"
             secureTextEntry

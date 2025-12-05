@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/authContext";
+import { AuthService } from "@/domain/auth/services/authService";
 import colors from "@/theme/colors";
 
 export default function Navbar() {
@@ -19,7 +20,8 @@ export default function Navbar() {
         navigation.navigate("Profile");
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await AuthService.logout();
         logout();
     };
 

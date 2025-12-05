@@ -5,6 +5,7 @@ import { logApiResponse } from "@/core/logger";
 const api = axios.create({
   baseURL: env.apiUrl,
   timeout: 10000,
+  withCredentials: true,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json"
@@ -18,12 +19,6 @@ api.interceptors.response.use(
   },
   async (error) => {
     logApiResponse(error)
-    const response = error.response.status;
-
-    if (response === 401 || response === 403) {          
-      await logout();
-    }
-
     return Promise.reject(error);
   }
 );

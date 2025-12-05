@@ -1,2 +1,2 @@
 export const BASE_URL = "/otp";
-export const VALID_TYPES = ["REGISTRATION", "LOGIN", "RECOVER"];
+export const VALID_TYPES = ["REGISTRATION", "RECOVER"];

@@ -1,476 +1,261 @@
-import React, { useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import useClassDetail from '@/domain/classes/hooks/useClassDetail';
-import { ClassesService } from '@/domain/classes/services/classesService';
-import colors from '@/theme/colors';
-import { toSpanishClassStatus, toSpanishParticipantStatus, canCancelFromParticipantStatus, canConfirmFromParticipantStatus } from '@/domain/classes/utils/statusUtils';
-import { useNotification } from "@/context/notificationContext";
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView, Platform } from "react-native";
+import colors from "@/theme/colors";
 
-function InfoCard({ icon, label, value, highlight }) {
-  if (!value) return null;
+import useClassDetail from "@/domain/classes/hooks/useClassDetail";
+import useLocations from "@/domain/home/hooks/useLocations";
+import { toSpanishClassStatus } from "@/domain/classes/utils/statusUtils";
+import GymMap from "@/domain/locations/components/gymMap";
+import { STATUS_BADGE_STYLES } from "@/domain/classes/config/constants";
+
+function Line({ label, value, highlight = false  }) {
+  if (!value && value !== 0) return null;
   return (
-    <View style={[styles.infoCard, highlight && styles.infoCardHighlight]}>
-      <Text style={styles.infoIcon}>{icon}</Text>
-      <View style={styles.infoContent}>
-        <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={[styles.infoValue, highlight && styles.infoValueHighlight]}>{value}</Text>
-      </View>
+    <View style={styles.line}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value}>{value}</Text>
     </View>
   );
 }
 
-function StatusBadge({ status, type }) {
-  const getStatusStyle = () => {
-    const s = (status || "").toLowerCase();
-    if (s.includes("confirm") || s.includes("asist")) return styles.statusConfirmed;
-    if (s.includes("cancel")) return styles.statusCancelled;
-    if (s.includes("curso") || s.includes("progress")) return styles.statusInProgress;
-    return styles.statusPending;
-  };
+const FONT_SCALE = Platform.OS === "web" ? 1 : 1.15;
 
-  return (
-    <View style={[styles.statusBadge, getStatusStyle()]}>
-      <Text style={styles.statusText}>{status}</Text>
-    </View>
-  );
-}
+const formatSpanishDate = (dateString) => {
+  if (!dateString) return null; 
+  const normalized = dateString.replace(" ", "T"); // para que Date lo entienda bien
+  const date = new Date(normalized);
 
-function formatDate(dt) {
-  if (!dt) return null;
-  const date = new Date(dt.includes(' ') ? dt.replace(' ', 'T') : dt);
-  if (isNaN(date.getTime())) return dt;
-  
-  const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-  
-  return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} · ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-}
+  return date.toLocaleDateString("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).replace(/,(?=\s*\d{2}:\d{2})/, ", a las");
+};
 
-function formatTime(dt) {
-  if (!dt) return null;
-  const date = new Date(dt.includes(' ') ? dt.replace(' ', 'T') : dt);
-  if (isNaN(date.getTime())) return dt;
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
 
 export default function ClassDetailScreen({ route }) {
   const { classId } = route.params || {};
-  const { data, loading, error, refresh } = useClassDetail(classId);
-  const [actionLoading, setActionLoading] = useState(false);
-  const { notifySuccess, notifyError } = useNotification();
+  const { data, loading: classLoading } = useClassDetail(classId);
+  const { locationsMap, loading: locationsLoading } = useLocations();
 
-  const handleConfirm = async () => {
-    try {
-      setActionLoading(true);
-      await ClassesService.confirm(classId);
-      notifySuccess('Éxito', 'Tu presencia fue confirmada.');
-      refresh();
-    } catch (e) {
-      notifyError('Error', e.message || 'No pudimos confirmar tu presencia.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleCancel = async () => {
-    Alert.alert(
-      'Cancelar inscripción',
-      '¿Estás seguro de que querés cancelar tu inscripción a esta clase?',
-      [
-        { text: 'No, mantener', style: 'cancel' },
-        {
-          text: 'Sí, cancelar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setActionLoading(true);
-              await ClassesService.cancel(classId);
-              notifySuccess("Éxito", "Tu inscripción fue cancelada correctamente.");
-              refresh();
-            } catch (e) {
-              notifyError('Error', e.message || 'No pudimos cancelar tu inscripción.');
-            } finally {
-              setActionLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  if (loading) {
+  if (classLoading || locationsLoading)
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Cargando detalles...</Text>
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
-  }
+  
+  const title = data.class_discipline_name;
+  const professor = `${data.professor_first_name} ${data.professor_last_name}`;
+  const scheduled = formatSpanishDate(data.class_scheduled_at);
+  const ended = formatSpanishDate(data.class_ended_at);
+  const status = data.class_status;
+  const gym = data.gym_name;
+  const gymAddress = data.gym_address;
+  const remainingCapacity = data.participants_checked_in_amount;
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.errorIcon}>⚠️</Text>
-        <Text style={styles.error}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={refresh}>
-          <Text style={styles.retryText}>Reintentar</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const locationData = locationsMap[data.gym_id];
+  const latitude = locationData.gym_latitude
+  const longitude = locationData.gym_longitude
 
-  const title = data?.class_discipline_name || 'Clase';
-  const professor = [data?.professor_first_name, data?.professor_last_name].filter(Boolean).join(' ');
-  const scheduled = formatDate(data?.class_scheduled_at);
-  const scheduledTime = formatTime(data?.class_scheduled_at);
-  const ended = formatDate(data?.class_ended_at);
-  const status = data?.class_status;
-  const gym = data?.gym_name;
-  const gymAddress = data?.gym_address;
-  const capacity = data?.class_max_participants;
-
-  const participantStatus = data?.participant_status;
-  const canConfirm = canConfirmFromParticipantStatus(participantStatus);
-  const canCancel = canCancelFromParticipantStatus(participantStatus);
   const displayStatus = toSpanishClassStatus(status);
-  const displayParticipant = toSpanishParticipantStatus(participantStatus);
+  const badgeDynamicStyle = STATUS_BADGE_STYLES[status];
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <Text style={styles.disciplineIcon}>🏋️</Text>
-          <View style={styles.headerInfo}>
+ return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <View style={styles.headerMain}>
             <Text style={styles.title}>{title}</Text>
-            {professor && <Text style={styles.professor}>con {professor}</Text>}
+            {gym && <Text style={styles.subtitle}>{gym}</Text>}
           </View>
-        </View>
-        <StatusBadge status={displayParticipant || displayStatus} />
-      </View>
 
-      {/* Fecha y hora destacada */}
-      <View style={styles.scheduleCard}>
-        <View style={styles.scheduleMain}>
-          <Text style={styles.scheduleIcon}>📅</Text>
-          <View>
-            <Text style={styles.scheduleLabel}>Fecha y hora</Text>
-            <Text style={styles.scheduleValue}>{scheduled}</Text>
-          </View>
-        </View>
-        {ended && (
-          <View style={styles.scheduleEnded}>
-            <Text style={styles.endedLabel}>Finalizó: {ended}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Información del lugar */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📍 Ubicación</Text>
-        <View style={styles.locationCard}>
-          <Text style={styles.gymName}>{gym || 'Sin especificar'}</Text>
-          {gymAddress && <Text style={styles.gymAddress}>{gymAddress}</Text>}
-        </View>
-      </View>
-
-      {/* Información adicional */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ℹ️ Información</Text>
-        <View style={styles.infoGrid}>
-          <InfoCard icon="👥" label="Cupo máximo" value={capacity ? `${capacity} personas` : null} />
-          <InfoCard icon="📊" label="Estado de clase" value={displayStatus} />
-        </View>
-      </View>
-
-      {/* Botones de acción */}
-      {(canConfirm || canCancel) && (
-        <View style={styles.actions}>
-          {canConfirm && (
-            <TouchableOpacity
-              style={[styles.button, styles.buttonConfirm]}
-              onPress={handleConfirm}
-              disabled={actionLoading}
-              activeOpacity={0.8}
-            >
-              {actionLoading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <>
-                  <Text style={styles.buttonIcon}>✓</Text>
-                  <Text style={styles.buttonText}>Confirmar Asistencia</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-          
-          {canCancel && (
-            <TouchableOpacity
-              style={[styles.button, styles.buttonCancel]}
-              onPress={handleCancel}
-              disabled={actionLoading}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.buttonCancelText}>Cancelar inscripción</Text>
-            </TouchableOpacity>
+          {displayStatus && (
+            <View style={styles.badgeWrapper}>
+              <Text style={styles.sectionTitle}>Estado de la clase</Text>
+              <View style={[styles.badge, badgeDynamicStyle]}>
+                <Text style={styles.badgeText}>{displayStatus}</Text>
+              </View>
+            </View>
           )}
         </View>
-      )}
+
+        <View style={styles.divider} />
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Detalles de la clase</Text>
+          <Line label="Profesor/a" value={professor}/>
+          <Line label="Fecha y hora programada para la clase" value={scheduled}/>
+          <Line label="Cupos restantes" value={remainingCapacity}/>
+          <Line label="Finalizó" value={ended}/>
+          <Line label="Dirección" value={gymAddress}/>
+        </View>
+
+        <View style={styles.divider} />
+        <View style={styles.mapSection}>
+          <View style={styles.mapHeaderRow}>
+            <Text style={styles.sectionTitle}>Ubicación del gimnasio</Text>
+          </View>
+          <Text style={styles.mapHint}>
+            Podés hacer zoom y moverte por el mapa para ver mejor la zona.
+          </Text>
+          <GymMap
+            latitude={latitude}
+            longitude={longitude}
+            gymName={gym}
+            gymAddress={gymAddress}
+          />
+        </View>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: colors.bg 
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
   },
-  content: { 
-    padding: 20,
-    paddingBottom: 40,
+  content: {
+    padding: 16,
   },
-  center: { 
-    flex: 1, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    padding: 20,
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
     backgroundColor: colors.bg,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 8,
+    fontSize: 14 * FONT_SCALE,
     color: colors.textMuted,
-    fontSize: 14,
   },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  error: { 
-    color: colors.primary, 
-    marginBottom: 16,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  retryText: { 
-    color: '#fff', 
-    fontWeight: '600',
-    fontSize: 14,
+  errorText: {
+    fontSize: 15 * FONT_SCALE,
+    color: colors.text,
   },
 
-  // Header
-  header: {
+  card: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: 18,
+    padding: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
   },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+
+  header: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 8,
   },
-  disciplineIcon: {
-    fontSize: 40,
-    marginRight: 16,
-  },
-  headerInfo: {
+  headerMain: {
     flex: 1,
+    paddingRight: 8,
   },
-  title: { 
-    fontSize: 24, 
-    fontWeight: '700', 
+  title: {
+    fontSize: 23 * FONT_SCALE,
+    fontWeight: "700",
     color: colors.text,
     marginBottom: 4,
   },
-  professor: {
-    fontSize: 15,
+  subtitle: {
+    fontSize: 14 * FONT_SCALE,
     color: colors.textMuted,
   },
 
-  // Status Badge
-  statusBadge: {
-    alignSelf: 'flex-start',
+  badgeWrapper: {
+    alignItems: "flex-end",
+  },
+  badgeLabel: {
+    fontSize: 11 * FONT_SCALE,
+    color: colors.textMuted,
+    marginBottom: 3,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  badge: {
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    borderRadius: 999,
   },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  statusPending: {
-    backgroundColor: '#f59e0b',
-  },
-  statusConfirmed: {
-    backgroundColor: '#10b981',
-  },
-  statusCancelled: {
-    backgroundColor: '#ef4444',
-  },
-  statusInProgress: {
-    backgroundColor: '#3b82f6',
+  badgeText: {
+    fontSize: 11 * FONT_SCALE,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    color: "#fff",
+    letterSpacing: 0.8,
   },
 
-  // Schedule Card
-  scheduleCard: {
-    backgroundColor: colors.primary + '15',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-  },
-  scheduleMain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  scheduleIcon: {
-    fontSize: 28,
-    marginRight: 14,
-  },
-  scheduleLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  scheduleValue: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  scheduleEnded: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.primary + '30',
-  },
-  endedLabel: {
-    fontSize: 13,
-    color: colors.textMuted,
+  divider: {
+    height: 1,
+    backgroundColor: "#2a2a34",
+    marginVertical: 14,
+    opacity: 0.7,
   },
 
-  // Sections
   section: {
-    marginBottom: 20,
+    marginTop: 4,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textMuted,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-
-  // Location Card
-  locationCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-  },
-  gymName: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 16 * FONT_SCALE,
+    fontWeight: "600",
     color: colors.text,
-    marginBottom: 4,
-  },
-  gymAddress: {
-    fontSize: 14,
-    color: colors.textMuted,
+    marginBottom: 8,
   },
 
-  // Info Grid
-  infoGrid: {
-    gap: 10,
+  line: {
+    marginBottom: 10,
   },
-  infoCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  infoCardHighlight: {
-    backgroundColor: colors.primary + '10',
-    borderWidth: 1,
-    borderColor: colors.primary + '30',
-  },
-  infoIcon: {
-    fontSize: 24,
-    marginRight: 14,
-  },
-  infoContent: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: 12,
+  label: {
+    fontSize: 12 * FONT_SCALE,
+    fontWeight: "500",
     color: colors.textMuted,
     marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  infoValue: {
-    fontSize: 15,
-    fontWeight: '500',
+  value: {
+    fontSize: 15 * FONT_SCALE,
     color: colors.text,
   },
-  infoValueHighlight: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
 
-  // Actions
-  actions: { 
+  mapSection: {
     marginTop: 8,
-    gap: 12,
+    marginBottom: 4,
   },
-  button: {
-    flexDirection: 'row',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  mapHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  buttonConfirm: { 
-    backgroundColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  buttonCancel: { 
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.textMuted,
-  },
-  buttonIcon: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginRight: 8,
-  },
-  buttonText: { 
-    color: '#fff', 
-    fontWeight: '700', 
-    fontSize: 16,
-  },
-  buttonCancelText: {
+  mapHint: {
+    fontSize: 13 * FONT_SCALE,
     color: colors.textMuted,
-    fontWeight: '600',
-    fontSize: 15,
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  mapCard: {
+    overflow: "hidden",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#272735",
+  },
+  mapFallback: {
+    fontSize: 13 * FONT_SCALE,
+    color: colors.textMuted,
+    marginTop: 4,
   },
 });

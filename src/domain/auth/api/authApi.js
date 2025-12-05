@@ -1,33 +1,30 @@
 import api from "@/api/api";
 import { BASE_URL } from "@/domain/auth/config/constants"
 
-const loginRequest = (credentials) => {
+const login = (credentials) => {
   return api.post(`${BASE_URL}/`, credentials);
 };
 
 const confirmAccount = (userData) => {
-  return api.post(`${BASE_URL}/confirmAccount`, userData);
-};
-
-const loginOtp = (otpTokenEvent) => {
-  return api.post(`${BASE_URL}/otp`, otpTokenEvent);
+  return api.post(`${BASE_URL}/confirm-account`, userData);
 };
 
 const recoverAccount = (userData) => {
   return api.post(`${BASE_URL}/recover`, userData);
 };
 
-const recoverAccountOtp = (userData) => {
-  return api.post(`${BASE_URL}/recoverOtp`, userData);
-};
-
 const refreshToken = (jwt_token) => {
   return api.post(`${BASE_URL}/refresh`, jwt_token);
 };
 
+const logout = async () => {
+  return await api.post(`${BASE_URL}/logout`);
+};
+
 export {
-  loginRequest, loginOtp,
+  login,
   confirmAccount,
-  recoverAccount, recoverAccountOtp,
-  refreshToken
+  recoverAccount,
+  refreshToken,
+  logout
 };

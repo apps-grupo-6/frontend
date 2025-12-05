@@ -30,6 +30,22 @@ export default function useClasses(selectedGym = null, selectedTimeRange = null)
         }
     };
 
+    const cancelClass = async (classId) => {
+        try {
+            setError("");
+            setLoading(true);
+            await ClassesService.cancelClass(classId);
+            await fetchClasses();
+            return true;
+        } catch (e) {
+            setError(e.message);
+            console.error('[cancelClass] Error:', e.message);
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchClasses();
     }, []);
@@ -92,6 +108,8 @@ export default function useClasses(selectedGym = null, selectedTimeRange = null)
         goToPreviousPage,
         isDescending,
         toggleOrder,
+
+        cancelClass
     };
 }
 

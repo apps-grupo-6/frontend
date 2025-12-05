@@ -8,6 +8,9 @@ const linking = {
       Register: "register",
       Home: "home",
       Recover: "recover",
+      Profile: "profile",
+      EditProfile: "edit-profile",
+      ClassDetail: "class-detail/:classId",
     },
   },
 };

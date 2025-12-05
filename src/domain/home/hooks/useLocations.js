@@ -3,9 +3,11 @@ import { LocationsService } from "@/domain/home/services/locationsService";
 
 export default function useLocations() {
     const [gymNames, setGymNames] = useState([]);
+    const [locationsMap, setLocationsMap] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    
     const fetchLocations = async () => {
         try {
             setError("");
@@ -14,6 +16,13 @@ export default function useLocations() {
             const locationsArray = Array.isArray(data) ? data : (data?.data || data?.locations || []);
             const uniqueNames = [...new Set(locationsArray.map(loc => loc.gym_name).filter(Boolean))];
             setGymNames(uniqueNames);
+
+            const map = {};
+            locationsArray.forEach(loc => {
+                const id = loc.gym_id;
+                map[id] = loc;
+            });
+            setLocationsMap(map);
         } catch (e) {
             setError(e.message);
             console.error('[useLocations] Error:', e.message);
@@ -26,6 +35,6 @@ export default function useLocations() {
         fetchLocations();
     }, []);
 
-    return { gymNames, loading, error };
+    return { gymNames, locationsMap, loading, error };
 }
 

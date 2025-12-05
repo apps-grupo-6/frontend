@@ -10,6 +10,7 @@ import useLocations from "@/domain/home/hooks/useLocations";
 import useReserveClass from "@/domain/home/hooks/useReserveClass";
 import useUpcomingClasses from "@/domain/classes/hooks/useUpcomingClasses";
 import { useNotification } from "@/context/notificationContext";
+import { useNavigation } from "@react-navigation/native";
 
 const TIME_RANGES = ['Todos los horarios', 'Mañana (6:00 - 12:00)', 'Mediodía (12:00 - 16:00)', 'Tarde (16:00 - 20:00)', 'Noche (20:00 - 24:00)'];
 const ALL_GYMS = 'Todos los gimnasios';
@@ -18,12 +19,13 @@ const ALL_TIMES = 'Todos los horarios';
 export default function HomeScreen() {
   const [selectedGym, setSelectedGym] = useState(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState(null);
-
-  const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder } = useClasses(selectedGym, selectedTimeRange);
+  
   const { gymNames, error: locationsError } = useLocations();
+  const { classes, loading, error, currentPage, totalPages, totalClasses, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, isDescending, toggleOrder, cancelClass } = useClasses(selectedGym, selectedTimeRange);
   const { reserveClass, loading: reserving } = useReserveClass();
   const { data: upcomingClasses, refresh: refreshUpcoming } = useUpcomingClasses();
   const { notifySuccess, notifyError } = useNotification();
+  const navigation = useNavigation();
   
   const reservedClassIds = useMemo(() => {
     if (!upcomingClasses || !Array.isArray(upcomingClasses)) return new Set();
@@ -60,8 +62,22 @@ export default function HomeScreen() {
     }
   };
 
+  const handleCancelClass = async (classData) => {
+    const ok = await cancelClass(classData.class_id);
+    
+    if (ok) {
+      notifySuccess(
+        "Clase cancelada",
+        `La clase ha sido cancelada correctamente.`
+      );
+    } else{
+      notifyError(
+        "Error al cancelar",
+        result.error || "No se pudo cancelar la clase"
+      );
+    }
+  };
 
-  const handleReserve = (classData) => notifySuccess("Éxito", `Reservaste la clase: ${classData.class_discipline_name}. Recorda que tenes que confirmar tu presencia.`);
   const handleGymSelect = (gymName) => setSelectedGym(gymName === ALL_GYMS ? null : gymName);
   const handleTimeRangeSelect = (timeRange) => setSelectedTimeRange(timeRange === ALL_TIMES ? null : timeRange);
 
@@ -144,8 +160,10 @@ export default function HomeScreen() {
                 <ClassCard
                   classData={item}
                   onReserve={handleReserve}
+                  onCancel={handleCancelClass}
                   imageIndex={index}
                   isReserved={isClassReserved(item.class_id)}
+                  onPress={() => navigation.navigate("ClassDetail", { classId: item.class_id })}
                 />
               )}
               contentContainerStyle={styles.listContent}

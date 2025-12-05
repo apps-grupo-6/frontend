@@ -5,7 +5,7 @@ import colors from "@/theme/colors";
 
 export default function OtpModal({
   visible,
-  otp_token,
+  otpToken,
   setOtp,
   onConfirm,
   onClose,
@@ -15,7 +15,7 @@ export default function OtpModal({
   title,
   subtitle = "Ingresá el código de 6 dígitos que te enviamos.",
 }) {
-  const canConfirm = (otp_token ?? "").toString().trim().length === 6 && !loading;
+  const canConfirm = (otpToken ?? "").toString().trim().length === 6 && !loading;
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
@@ -25,7 +25,7 @@ export default function OtpModal({
           {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
           {!!otpErrorMsg && <Text style={styles.error}>{otpErrorMsg}</Text>}
 
-          <OtpInput value={otp_token} onChange={setOtp} length={6} autoFocus />
+          <OtpInput value={otpToken} onChange={setOtp} length={6} autoFocus />
 
           <PrimaryButton
             title="Confirmar"

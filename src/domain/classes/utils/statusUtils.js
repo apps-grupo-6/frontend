@@ -1,80 +1,45 @@
 function norm(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value).trim().toLowerCase();
 }
 
 export function toSpanishClassStatus(status) {
   const s = norm(status);
   switch (s) {
     case "not started":
-    case "no iniciada":
-    case "not_started":
-    case "pending":
-      return "No iniciada";
-    case "in progress":
-    case "in_progress":
-    case "ongoing":
+      return "La clase aún no ha comenzado";
     case "started":
-      return "En curso";
-    case "completed":
-    case "done":
-    case "finalizada":
+      return "La clase está en curso";
     case "finished":
-      return "Finalizada";
-    case "scheduled":
-    case "programada":
-      return "Programada";
-    case "confirmed":
-    case "confirmada":
-      return "Confirmada";
+      return "La clase ha finalizado";
     case "cancelled":
-    case "canceled":
-    case "cancelada":
-      return "Cancelada";
-    default:
-      // Capitalizar por defecto
-      if (!s) return "";
-      return s.charAt(0).toUpperCase() + s.slice(1);
+      return "La clase ha sido cancelada";
   }
 }
 
 export function toSpanishParticipantStatus(status) {
   const s = norm(status);
   switch (s) {
-    case "not confimet":
     case "not confirmed":
-    case "not_confirmed":
-    case "unconfirmed":
-      return "No confirmada";
-    case "pending":
-    case "pendiente":
-    case "enrolled":
-    case "inscripto":
-    case "registered":
-      return "Pendiente";
+      return "Participación no confirmada";
     case "confirmed":
-    case "confirmada":
-      return "Confirmada";
-    case "checked_in":
-    case "asistio":
-    case "attended":
-      return "Asistió";
+      return "Participación confirmada";
     case "cancelled":
-    case "canceled":
-    case "cancelado":
-    case "cancelada":
-      return "Cancelada";
-    default:
-      if (!s) return "";
-      return s.charAt(0).toUpperCase() + s.slice(1);
+      return "Participación cancelada";
+    case "expired":
+      return "No confirmaste tu participación a tiempo, la clase finalizó";
+    case "absent":
+      return "Confirmaste tu presencia y no asististe a la clase";
+    case "present":
+      return "Asististe a la clase";
   }
 }
 
 export function canConfirmFromParticipantStatus(status) {
   const s = norm(status);
-  return ["pending", "pendiente", "enrolled", "inscripto", "registered", "not confirmed", "not_confirmed", "unconfirmed", "not confimet"].includes(s);
+  return "not confirmed" == s;
 }
 
 export function canCancelFromParticipantStatus(status) {
   const s = norm(status);
-  return !["cancelled", "canceled", "cancelado", "cancelada", "finalizada", "completed", "done", "confirmed", "confirmada", "checked_in", "asistio", "attended"].includes(s);
+  return ["not confirmed", "confirmed"].includes(s);
 }
