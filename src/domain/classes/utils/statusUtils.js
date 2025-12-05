@@ -76,5 +76,5 @@ export function canConfirmFromParticipantStatus(status) {
 
 export function canCancelFromParticipantStatus(status) {
   const s = norm(status);
-  return !["cancelled", "canceled", "cancelado", "cancelada", "finalizada", "completed", "done"].includes(s);
+  return !["cancelled", "canceled", "cancelado", "cancelada", "finalizada", "completed", "done", "confirmed", "confirmada", "checked_in", "asistio", "attended"].includes(s);
 }

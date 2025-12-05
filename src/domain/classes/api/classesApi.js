@@ -12,12 +12,9 @@ const getHistory = async (since, until) => {
 
 const getClass = async (id) => api.get(`${BASE_URL}/${id}`);
 
-// Endpoints según backend Flask compartido:
-// PUT /<id>/participant/confirm
-// DELETE /<id>/participant
-const confirmClass = async (id) => api.put(`${BASE_URL}/${id}/participant/confirm`);
+const confirmClass = async (id) => api.patch(`${BASE_URL}/${id}/participant/confirm`);
 
-const cancelClass = async (id) => api.delete(`${BASE_URL}/${id}/participant`);
+const cancelClass = async (id) => api.patch(`${BASE_URL}/${id}/participant/cancel`);
 
 export { getUpcoming, getHistory };
 export { getClass, confirmClass, cancelClass };

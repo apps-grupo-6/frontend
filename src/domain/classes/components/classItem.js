@@ -95,29 +95,34 @@ export default function ClassItem({ item, onPress, onActionDone, showActions = t
           )}
           {canCancel && (
             <PrimaryButton
-              title="Cancelar"
+              title="Cancelar inscripción"
               variant="secondary"
               loading={loadingCancel}
-              onPress={async () => {
-                const confirmed = typeof window !== 'undefined'
-                  ? window.confirm("¿Estás seguro de que querés cancelar tu inscripción?")
-                  : true;
-
-                if (!confirmed) {
-                  return;
-                }
-
-                try {
-                  setLoadingCancel(true);
-                  const result = await ClassesService.cancel(classId);
-                  notifySuccess("Éxito", "Tu inscripción fue cancelada.");
-                  onActionDone && onActionDone();
-                } catch (e) {
-                  console.error("Error al cancelar:", e);
-                  notifyError(`Error: ${e.message || "No pudimos cancelar tu inscripción."}`);
-                } finally {
-                  setLoadingCancel(false);
-                }
+              onPress={() => {
+                Alert.alert(
+                  'Cancelar inscripción',
+                  '¿Estás seguro de que querés cancelar tu inscripción a esta clase?',
+                  [
+                    { text: 'No, mantener', style: 'cancel' },
+                    {
+                      text: 'Sí, cancelar',
+                      style: 'destructive',
+                      onPress: async () => {
+                        try {
+                          setLoadingCancel(true);
+                          await ClassesService.cancel(classId);
+                          notifySuccess("Éxito", "Tu inscripción fue cancelada.");
+                          onActionDone && onActionDone();
+                        } catch (e) {
+                          console.error("Error al cancelar:", e);
+                          notifyError("Error", e.message || "No pudimos cancelar tu inscripción.");
+                        } finally {
+                          setLoadingCancel(false);
+                        }
+                      },
+                    },
+                  ]
+                );
               }}
             />
           )}
